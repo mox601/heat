@@ -32,7 +32,7 @@ import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.utils.RestAssuredRequestMaker;
 import com.hotels.heat.core.utils.TestCaseUtils;
 import com.hotels.heat.core.utils.TestRequest;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 import com.jayway.restassured.internal.http.Method;
 import com.jayway.restassured.response.Response;
@@ -57,7 +57,7 @@ public class BasicMultipleChecks {
     private final Map<String, String> paths;
     private final Map<String, String> httpMethods;
 
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
     private final ITestContext context;
 
     private Map<String, Object> inputJsonObjs = new HashMap<>();
@@ -72,7 +72,7 @@ public class BasicMultipleChecks {
         this.httpMethods = new HashMap<>();
     }
 
-    public LoggingUtils getLogUtils() {
+    public Log getLogUtils() {
         return this.logUtils;
     }
 

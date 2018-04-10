@@ -18,6 +18,8 @@ package com.hotels.heat.core.runner;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.utils.log.Log;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
@@ -41,11 +43,9 @@ import com.jayway.restassured.response.Response;
  */
 public class SingleMode extends TestBaseRunner {
 
-
-
     private String webappPath;
-    private ITestContext testContext;
     private String webappName;
+    private Log logger = new Log(SingleMode.class);
 
     /**
      * Method that takes test suites parameters and sets some environment properties.
@@ -87,34 +87,31 @@ public class SingleMode extends TestBaseRunner {
      */
     @Test(dataProvider = "provider")
     public void runningTest(Map testCaseParams, ITestContext context) {
-        setContextAttributes(testCaseParams);
-        String testSuiteName = getTestContext().getName();
-        String testCaseId = testCaseParams.get(TestBaseRunner.ATTR_TESTCASE_ID).toString();
-        getTestContext().setAttribute(TestBaseRunner.ATTR_TESTCASE_ID, testCaseId);
 
-        if (!super.isTestCaseSkippable(testSuiteName, testCaseId, webappName, webappPath)) {
-            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(testCaseParams);
-            getLogUtils().debug("test not skippable");
-            Response apiResponse = executeRequest(testCaseParamsElaborated, context);
+        TestCase testCaseObj = retrieveTc(testCaseParams);
+
+        if (!super.isTestCaseSkippable(testCaseObj, webappName, webappPath)) {
+            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(testCaseObj, testCaseParams);
+            logger.debug(testCaseObj, "test not skippable");
+            Response apiResponse = executeRequest(testCaseObj, testCaseParamsElaborated, context);
 
             TestSuiteHandler.getInstance().getTestCaseUtils().setWebappPath(webappPath);
-            BasicChecks basicChecks = new BasicChecks(testContext);
+            BasicChecks basicChecks = new BasicChecks(testCaseObj);
             basicChecks.setResponse(apiResponse);
             basicChecks.commonTestValidation(testCaseParamsElaborated);
 
             Map<String, Response> rspMap = new HashMap<>();
             rspMap.put(webappName, apiResponse);
 
-            super.specificChecks(testCaseParamsElaborated, rspMap, TestSuiteHandler.getInstance().getEnvironmentHandler().getEnvironmentUnderTest());
+            super.specificChecks(testCaseObj, testCaseParamsElaborated, rspMap, TestSuiteHandler.getInstance().getEnvironmentHandler().getEnvironmentUnderTest());
 
         } else {
-            getLogUtils().trace("test skippable");
-            getTestContext().setAttribute(testSuiteName + TestBaseRunner.TESTCASE_ID_SEPARATOR + testCaseId,
-                    TestBaseRunner.STATUS_SKIPPED);
+            logger.trace(testCaseObj, "test skippable");
+            testCaseObj.setSkippable();
         }
     }
 
-    private Response executeRequest(Map testCaseParamsElaborated, ITestContext context) {
+    private Response executeRequest(TestCase testCaseObj, Map testCaseParamsElaborated, ITestContext context) {
         Response apiRsp;
 
         try {
@@ -127,23 +124,14 @@ public class SingleMode extends TestBaseRunner {
             tr.getHeadersParams().put("X-Heat-Test-Id", context.getName() + "." + testCaseParamsElaborated.get("testId"));
             apiRsp = restAssuredRequestMaker.executeTestRequest(tr);
             if (apiRsp == null) {
-                throw new HeatException(getLogUtils().getExceptionDetails() + "Exception: the service has provided a response null");
+                throw new HeatException(SingleMode.class, testCaseObj, "Exception: the service has provided a response null");
             }
 
         } catch (Exception oEx) {
-            getLogUtils().error("Exception class '{}', cause '{}', message '{}'",
-                    new Object[] {oEx.getClass(), oEx.getCause(), oEx.getLocalizedMessage()});
-            throw new HeatException(getLogUtils().getExceptionDetails() + "Exception message: '" + oEx.getLocalizedMessage() + "'", oEx);
+            throw new HeatException(SingleMode.class, testCaseObj, oEx);
         }
 
         return apiRsp;
     }
 
-    public String getWebappPath() {
-        return webappPath;
-    }
-
-    public String getWebappName() {
-        return webappName;
-    }
 }

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import com.hotels.heat.core.handlers.TestCase;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
@@ -32,7 +33,7 @@ import com.hotels.heat.core.handlers.TestCaseMapHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.heatspecificchecks.SpecificChecks;
 import com.hotels.heat.core.utils.RunnerInterface;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 import com.jayway.restassured.response.Response;
 
@@ -42,8 +43,10 @@ import com.jayway.restassured.response.Response;
  */
 public class TestBaseRunner implements RunnerInterface {
 
+    private static Log logger = new Log(TestBaseRunner.class);
+
     static {
-        (new LoggingUtils()).info("\n\n"
+        logger.info(TestCase.getInstance(), "\n\n"
             + "      ___           ___           ___                 \n"
             + "     /__/\\         /  /\\         /  /\\          ___   \n"
             + "     \\  \\:\\       /  /:/_       /  /::\\        /  /\\  \n"
@@ -79,6 +82,7 @@ public class TestBaseRunner implements RunnerInterface {
 
     private PlaceholderHandler placeholderHandler;
     private String inputJsonPath;
+    private TestCase tcObject = TestCase.getInstance();
 
     /**
      * Method that takes test suites parameters and sets some environment properties.
@@ -95,8 +99,12 @@ public class TestBaseRunner implements RunnerInterface {
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
         testSuiteHandler.setPropertyFilePath(propFilePath);
         testSuiteHandler.populateEnvironmentHandler();
-        testSuiteHandler.populateTestCaseUtils();
+        populateTestCaseObject(testContext);
+        testSuiteHandler.setTestCaseObject(this.tcObject);
+    }
 
+    private void populateTestCaseObject(ITestContext context) {
+        tcObject.setTestSuiteName(context.getName());
     }
 
     /**
@@ -114,7 +122,6 @@ public class TestBaseRunner implements RunnerInterface {
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
         testSuiteHandler.getEnvironmentHandler().setEnabledEnvironments(enabledEnvironments);
         inputJsonPath = inputJsonParamPath;
-        testSuiteHandler.getLogUtils().setTestContext(context);
         testContext = context;
     }
 
@@ -132,9 +139,9 @@ public class TestBaseRunner implements RunnerInterface {
      * @return the same structure as the input parameters but with placeholders resolved
      */
     @Override
-    public Map resolvePlaceholdersInTcParams(Map<String, Object> testCaseParams) {
+    public Map resolvePlaceholdersInTcParams(TestCase testCaseObj, Map<String, Object> testCaseParams) {
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
-        testSuiteHandler.getLogUtils().setTestCaseId(testContext.getAttribute(ATTR_TESTCASE_ID).toString());
+        /*testSuiteHandler.getLogUtils().setTestCaseId(testContext.getAttribute(ATTR_TESTCASE_ID).toString());*/
 
         // now we start elaborating the parameters.
         placeholderHandler = new PlaceholderHandler();
@@ -164,18 +171,22 @@ public class TestBaseRunner implements RunnerInterface {
     /**
      * Checks if the test case is skippable or not, basing on the name of the current test suite (if the system parameter 'heatTest' is set in the
      * test running command) and on other suppositions.
-     * @param currentTestSuiteName name of the test suite currently in execution
-     * @param currentTestCaseId name of the test case currently in execution
+     * @param testCaseObj TestCase object
      * @param webappName name of the service under test
      * @param webappPath path of the service under test (basing on the environment)
      * @return a boolean that indicates if this test case will be skipped
      */
-    public boolean isTestCaseSkippable(String currentTestSuiteName, String currentTestCaseId, String webappName, String webappPath) {
+    public boolean isTestCaseSkippable(TestCase testCaseObj, String webappName, String webappPath) {
+
+        String currentTestSuiteName = testCaseObj.getTestSuiteName();
+        String currentTestCaseId = testCaseObj.getTestIdNumber();
+
         boolean thisTestIsSkippable = false;
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
+        testSuiteHandler.setTestCaseObject(testCaseObj);
 
         boolean isParamsValid = testSuiteHandler.getTestCaseUtils().isCommonParametersValid(webappName, webappPath, getInputJsonPath(),
-                testSuiteHandler.getLogUtils(), testSuiteHandler.getEnvironmentHandler());
+                testSuiteHandler.getEnvironmentHandler());
         if (!isParamsValid) {
             thisTestIsSkippable = true; //Skip current test if shared parameters are missing
         } else {
@@ -238,10 +249,9 @@ public class TestBaseRunner implements RunnerInterface {
      * @param environment environment used for this test
      */
     @Override
-    public void specificChecks(Map testCaseParams, Map<String, Response> rspRetrieved, String environment) {
+    public void specificChecks(TestCase tcObject, Map testCaseParams, Map<String, Response> rspRetrieved, String environment) {
         ServiceLoader.load(SpecificChecks.class).forEach((checks) -> {
-            checks.process(getTestContext().getName(), testCaseParams, rspRetrieved,
-                    TestSuiteHandler.getInstance().getLogUtils().getTestCaseDetails(),
+            checks.process(tcObject, testCaseParams, rspRetrieved,
                     TestSuiteHandler.getInstance().getEnvironmentHandler().getEnvironmentUnderTest());
         });
     }
@@ -263,9 +273,12 @@ public class TestBaseRunner implements RunnerInterface {
         return testContext;
     }
 
-    public LoggingUtils getLogUtils() {
-        return TestSuiteHandler.getInstance().getLogUtils();
+    public TestCase retrieveTc(Map testCaseParams) {
+        String testSuiteName = testContext.getName();
+        String testCaseId = testCaseParams.get(TestBaseRunner.ATTR_TESTCASE_ID).toString();
+        return TestCase.getInstance(testSuiteName, testCaseId);
     }
+
 
 
 }

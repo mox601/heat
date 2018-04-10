@@ -15,15 +15,23 @@
  */
 package com.hotels.heat.core.specificexception;
 
+import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.utils.log.Log;
+
 /**
  * Specific exception for heat test framework.
  */
 public class HeatException extends Error {
 
-    public HeatException(String exceptionMessage) {
-        super(exceptionMessage);
+    private Log logger;
+
+    public HeatException(Class InputClass, TestCase tcObj, Exception oEx) {
+        logger = new Log(InputClass);
+        logger.logException(oEx.getClass(), tcObj, oEx);
     }
-    public HeatException(String exceptionMessage, Throwable cause) {
-        super(exceptionMessage, cause);
+
+    public HeatException(Class InputClass, TestCase tcObj, String message, Object... params) {
+        logger = new Log(InputClass);
+        logger.error(tcObj, message, params);
     }
 }

@@ -29,7 +29,7 @@ import com.hotels.heat.core.environment.EnvironmentHandler;
 import com.hotels.heat.core.heatmodules.HeatPlaceholderModuleProvider;
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.utils.TestCaseUtils;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 import com.jayway.restassured.path.json.config.JsonPathConfig;
 import com.jayway.restassured.response.Response;
@@ -67,7 +67,7 @@ public class PlaceholderHandler {
     private static final String REGEXP_GET_STEP_OUTPUT_PARAM_NAME = ".*?\\$\\{getStep\\(.*?\\).getOutputParam\\((.*?)\\)\\}.*?";
     private static final String REGEXP_GET_STEP_NUMBER = ".*?\\$\\{getStep\\((.*?)\\).*?\\}.*?";
 
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
 
     private Map<String, HeatPlaceholderModuleProvider> providerMap;
 

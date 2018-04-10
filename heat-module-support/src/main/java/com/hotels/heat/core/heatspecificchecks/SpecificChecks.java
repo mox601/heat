@@ -18,6 +18,7 @@ package com.hotels.heat.core.heatspecificchecks;
 import java.util.Map;
 import java.util.Set;
 
+import com.hotels.heat.core.handlers.TestCase;
 import com.jayway.restassured.response.Response;
 
 /**
@@ -31,7 +32,13 @@ public abstract class SpecificChecks {
         }
     }
 
-    protected abstract void process(Map testCaseParamenter, Map<String, Response> responsesRetrieved, String testRef, String environment);
+    public void process(TestCase tcObject, Map testCaseParamenter, Map<String, Response> responsesRetrieved, String environment) {
+        if (this.handledSuites().contains(tcObject.getTestSuiteName())) {
+            this.process(testCaseParamenter, responsesRetrieved, environment);
+        }
+    }
+
+    protected abstract void process(Map testCaseParamenter, Map<String, Response> responsesRetrieved, String environment);
 
     protected abstract Set<String> handledSuites();
 

@@ -23,7 +23,7 @@ import java.util.List;
 import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.handlers.PropertyHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 
 /**
@@ -44,7 +44,7 @@ public final class EnvironmentHandler {
     private String environmentUnderTest;
     private String webappUnderTest;
 
-    private LoggingUtils logUtils;
+    private Log logUtils;
     private List<String> heatTestPropertyList;
     private PlaceholderHandler placeholderHandler;
 

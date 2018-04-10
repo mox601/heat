@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hotels.heat.core.handlers.TestCase;
 import org.apache.http.HttpStatus;
 import org.testng.ITestContext;
 
@@ -30,7 +31,7 @@ import com.hotels.heat.core.handlers.OperationHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.utils.TestCaseUtils;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 import com.jayway.restassured.module.jsv.JsonSchemaValidator;
 import com.jayway.restassured.response.Header;
@@ -58,8 +59,8 @@ public class BasicChecks {
     private Object responses; // in case of flow, this is the step responses
     private AssertionHandler assertionHandler;
 
-    private final LoggingUtils logUtils;
-    private final ITestContext testContext;
+    private TestCase testCaseObj = null;
+    private Log logUtils = new Log();
 
     private Map<Integer, Map<String, String>> retrievedParameters = new HashMap<>();
 
@@ -68,10 +69,9 @@ public class BasicChecks {
      * @param testContext context of the test case. It contains infos for
      * logging
      */
-    public BasicChecks(ITestContext testContext) {
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
-        this.testContext = testContext;
+    public BasicChecks(TestCase testCaseObj) {
         this.assertionHandler = new AssertionHandler();
+        this.testCaseObj = testCaseObj;
     }
 
     /**
@@ -92,10 +92,8 @@ public class BasicChecks {
             isTestOk &= headerChecks(testCaseParams);
             isTestOk &= cookieChecks(testCaseParams);
         } catch (Exception oEx) {
-            logUtils.error("Exception: class {}, cause {}, message {}",
-                oEx.getClass(), oEx.getCause(), oEx.getLocalizedMessage());
-            throw new HeatException(logUtils.getExceptionDetails() + "localized message: '"
-                + oEx.getLocalizedMessage() + "'");
+            logUtils.logException(oEx);
+            throw new HeatException(this.testCaseObj);
         }
 
         if (!isTestOk) {

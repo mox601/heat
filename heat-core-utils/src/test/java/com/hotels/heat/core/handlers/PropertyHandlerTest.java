@@ -26,7 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 
 /**
@@ -38,7 +38,7 @@ import com.hotels.heat.core.utils.log.LoggingUtils;
 public class PropertyHandlerTest {
 
     @Mock
-    private LoggingUtils logUtils;
+    private Log logUtils;
 
     @Mock
     private PlaceholderHandler placeholderHandler;
@@ -48,7 +48,7 @@ public class PropertyHandlerTest {
 
     @BeforeMethod
     public void setUp() {
-        logUtils = new LoggingUtils();
+        logUtils = new Log();
     }
 
     private void clearSysProperties() {

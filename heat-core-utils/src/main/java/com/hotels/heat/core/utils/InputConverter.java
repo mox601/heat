@@ -17,7 +17,7 @@ package com.hotels.heat.core.utils;
 
 import java.math.BigDecimal;
 
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 
 /**
@@ -25,9 +25,9 @@ import com.hotels.heat.core.utils.log.LoggingUtils;
  */
 public class InputConverter {
     private static final String LOG_VALUE = "String to convert is : {} and its converted value is {}";
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
 
-    public InputConverter(LoggingUtils logUtils) {
+    public InputConverter(Log logUtils) {
         this.logUtils = logUtils;
     }
 

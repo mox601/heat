@@ -22,7 +22,7 @@ import org.testng.asserts.Assertion;
 
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.utils.CustomSoftAssert;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 
 /**
@@ -30,7 +30,7 @@ import com.hotels.heat.core.utils.log.LoggingUtils;
  */
 public class AssertionHandler {
 
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
 
     public AssertionHandler() {
         this.logUtils = TestSuiteHandler.getInstance().getLogUtils();

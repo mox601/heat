@@ -32,7 +32,7 @@ import com.google.common.base.Optional;
 
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.specificexception.HeatException;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.filter.log.LogDetail;
@@ -55,7 +55,7 @@ public class RestAssuredRequestMaker {
 
     private RequestSpecification requestSpecification;
     private String defUrl;
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
     private String webappPath;
 
     /**
@@ -267,7 +267,8 @@ public class RestAssuredRequestMaker {
      */
     private RequestSpecification given() {
         RequestSpecification restSpec;
-        if (LoggingUtils.LOG_LEVEL_DEBUG.equals(System.getProperty(LOG_LEVEL_PROPERTY, LoggingUtils.LOG_LEVEL_INFO).toUpperCase())) {
+        String logLevelProperty = System.getProperty(LOG_LEVEL_PROPERTY, Log.LOG_LEVEL_INFO).toUpperCase();
+        if (Log.LOG_LEVEL_DEBUG.equals(logLevelProperty)) {
             restSpec = RestAssured.given().baseUri(defUrl);
         } else {
             restSpec = RestAssured.given().log().ifValidationFails().baseUri(defUrl);
@@ -283,7 +284,8 @@ public class RestAssuredRequestMaker {
      */
     private RequestSpecification givenSsl() {
         RequestSpecification restSpec;
-        if (LoggingUtils.LOG_LEVEL_DEBUG.equals(System.getProperty(LOG_LEVEL_PROPERTY, LoggingUtils.LOG_LEVEL_INFO).toUpperCase())) {
+        String logLevelProperty = System.getProperty(LOG_LEVEL_PROPERTY, Log.LOG_LEVEL_INFO).toUpperCase();
+        if (Log.LOG_LEVEL_DEBUG.equals(logLevelProperty)) {
             restSpec = RestAssured.given().urlEncodingEnabled(true).relaxedHTTPSValidation().baseUri(defUrl);
         } else {
             restSpec = RestAssured.given().urlEncodingEnabled(true).log().ifValidationFails().relaxedHTTPSValidation().baseUri(defUrl);

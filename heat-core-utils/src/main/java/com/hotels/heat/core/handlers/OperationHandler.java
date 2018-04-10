@@ -24,7 +24,7 @@ import com.hotels.heat.core.checks.BasicMultipleChecks;
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.utils.DataExtractionSupport;
 import com.hotels.heat.core.utils.TestCaseUtils;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 import com.hotels.heat.core.validations.ArithmeticalValidator;
 import com.hotels.heat.core.validations.StringValidator;
 
@@ -50,7 +50,7 @@ public class OperationHandler {
 
     private String checkDescription;
     private boolean isBlocking = true;
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
     private Object responses;
     private DataExtractionSupport dataExtractionSupport;
     private final AssertionHandler assertionHandler;
@@ -316,7 +316,7 @@ public class OperationHandler {
         this.retrievedParameters = retrievedParameters;
     }
 
-    public LoggingUtils getLogUtils() {
+    public Log getLogUtils() {
         return logUtils;
     }
 }

@@ -30,7 +30,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.hotels.heat.core.specificexception.HeatException;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 /**
  * Unit Tests for {@link DataExtractionSupport}.
@@ -41,14 +41,14 @@ import com.hotels.heat.core.utils.log.LoggingUtils;
 public class DataExtractionSupportTest {
 
     @Mock
-    private LoggingUtils logUtils;
+    private Log logUtils;
 
     @InjectMocks
     private DataExtractionSupport underTest;
 
     @BeforeMethod
     public void setUp() {
-        logUtils = new LoggingUtils();
+        logUtils = new Log();
     }
 
     @Test

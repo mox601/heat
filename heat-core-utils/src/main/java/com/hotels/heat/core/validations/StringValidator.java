@@ -16,7 +16,7 @@
 package com.hotels.heat.core.validations;
 
 import com.hotels.heat.core.handlers.AssertionHandler;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 /**
  * String validator.
@@ -28,14 +28,14 @@ public class StringValidator {
     public static final String STRING_OPERATOR_NOT_EQUALS_TO = "not equals to";
 
     private final AssertionHandler assertionHandler;
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
 
     /**
      * Constructor of the string validator.
      * It supports validations between two strings (equals and not equals).
      * @param logUtils logging utility
      */
-    public StringValidator(LoggingUtils logUtils) {
+    public StringValidator(Log logUtils) {
         this.logUtils = logUtils;
         this.assertionHandler = new AssertionHandler();
     }

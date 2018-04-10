@@ -17,7 +17,6 @@ package com.hotels.heat.core.handlers;
 
 import com.hotels.heat.core.environment.EnvironmentHandler;
 import com.hotels.heat.core.utils.TestCaseUtils;
-import com.hotels.heat.core.utils.log.LoggingUtils;
 
 
 /**
@@ -34,12 +33,11 @@ public final class TestSuiteHandler {
     private static TestSuiteHandler testSuiteHandler;
     private EnvironmentHandler environmentHandler;
     private TestCaseUtils tcUtils;
-    private LoggingUtils logUtils;
     private String webappName;
     private String propertyFilePath;
+    private TestCase tcObject;
 
     private TestSuiteHandler() {
-        logUtils = new LoggingUtils();
         tcUtils = new TestCaseUtils();
     }
 
@@ -83,16 +81,13 @@ public final class TestSuiteHandler {
         this.environmentHandler = new EnvironmentHandler(propertyFilePath);
     }
 
-    public LoggingUtils getLogUtils() {
-        return logUtils;
-    }
-
-    public void populateTestCaseUtils() {
-        tcUtils.setLogUtils(logUtils);
-    }
-
     public TestCaseUtils getTestCaseUtils() {
         return tcUtils;
+    }
+
+    public void setTestCaseObject(TestCase tcObjInput) {
+        this.tcObject = tcObjInput;
+        this.tcUtils.setTcObject(this.tcObject);
     }
 
 }

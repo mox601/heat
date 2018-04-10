@@ -20,7 +20,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 /**
  * Manages the framework system configuration from properties file.
@@ -28,7 +28,7 @@ import com.hotels.heat.core.utils.log.LoggingUtils;
 public class PropertyHandler {
     private Properties properties;
     private final String propFile;
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
     private boolean isLoaded;
     private PlaceholderHandler placeholderHandler;
 

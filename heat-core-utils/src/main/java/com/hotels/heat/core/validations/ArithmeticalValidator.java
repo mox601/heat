@@ -17,7 +17,7 @@ package com.hotels.heat.core.validations;
 
 import com.hotels.heat.core.handlers.AssertionHandler;
 import com.hotels.heat.core.utils.InputConverter;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 /**
  * Cases of the arithmetic checks.
@@ -36,7 +36,7 @@ public class ArithmeticalValidator {
 
     private final InputConverter converter;
     private final AssertionHandler assertionHandler;
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
 
     /**
      * Constructor of Arithmetical Validator.
@@ -44,7 +44,7 @@ public class ArithmeticalValidator {
      * =, !=, &gt;, &gt;=, &lt;, &lt;+
      * @param logUtils the object that contains test case information useful for logging
      */
-    public ArithmeticalValidator(LoggingUtils logUtils) {
+    public ArithmeticalValidator(Log logUtils) {
         this.logUtils = logUtils;
         this.converter = new InputConverter(logUtils);
         this.assertionHandler = new AssertionHandler();

@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.hotels.heat.core.handlers.TestCase;
 import org.testng.ITestContext;
 import org.testng.SkipException;
 
@@ -33,7 +34,7 @@ import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.runner.TestBaseRunner;
 import com.hotels.heat.core.specificexception.HeatException;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 import com.jayway.restassured.internal.http.Method;
 import com.jayway.restassured.path.json.JsonPath;
@@ -75,7 +76,8 @@ public class TestCaseUtils {
     private PlaceholderHandler placeholderHandler;
     private Map<String, Object> preloadVariables;
 
-    private LoggingUtils logUtils;
+    private TestCase tcObject;
+    private Log logger = new Log(TestCaseUtils.class);
 
     /**
      * Constructor for TestCaseUtils object.
@@ -89,17 +91,13 @@ public class TestCaseUtils {
         this.suiteDescription = SUITE_DESCRIPTION_DEFAULT;
     }
 
-    public void setLogUtils(LoggingUtils logUtils) {
-        this.logUtils = logUtils;
-    }
-
     private void loadGeneralSettings(JsonPath testSuiteJsonPath) {
         Map<String, String> generalSettings = testSuiteJsonPath.get(JSONPATH_GENERAL_SETTINGS);
         if (generalSettings.containsKey(JSON_FIELD_HTTP_METHOD)) {
             try {
                 httpMethod = Method.valueOf(generalSettings.get(JSON_FIELD_HTTP_METHOD));
             } catch (IllegalArgumentException oEx) {
-                throw new HeatException("HTTP method '" + generalSettings.get(JSON_FIELD_HTTP_METHOD) + "' not supported");
+                throw new HeatException(TestCaseUtils.class, this.tcObject, "HTTP method '{}' not supported", generalSettings.get(JSON_FIELD_HTTP_METHOD));
             }
         }
         if (generalSettings.containsKey(SUITE_DESCRIPTION_PATH)) {
@@ -111,11 +109,11 @@ public class TestCaseUtils {
     private void loadPreloadedSection(JsonPath testSuiteJsonPath) {
         preloadVariables = testSuiteJsonPath.get(JSONPATH_PRELOAD_SECTION);
         if (preloadVariables != null && !preloadVariables.isEmpty()) {
-            logUtils.debug("PRELOAD VARIABLES PRESENT");
+            logger.debug(this.tcObject, "PRELOAD VARIABLES PRESENT");
             placeholderHandler = new PlaceholderHandler();
             for (Map.Entry<String, Object> entry : preloadVariables.entrySet()) {
                 preloadVariables.put(entry.getKey(), placeholderHandler.placeholderProcessString(entry.getValue().toString()));
-                logUtils.debug("PRELOADED VARIABLE: '{}' = '{}'", entry.getKey(), entry.getValue());
+                logger.debug(this.tcObject, "PRELOADED VARIABLE: '{}' = '{}'", entry.getKey(), entry.getValue());
             }
         }
     }
@@ -144,11 +142,11 @@ public class TestCaseUtils {
      */
     public Iterator<Object[]> jsonReader(String testSuiteFilePath, ITestContext context) {
         Iterator<Object[]> iterator = null;
-        if (logUtils == null) {
-            throw new HeatException(logUtils.getExceptionDetails() + "logUtils null");
+        if (logger == null) {
+            throw new HeatException(TestCaseUtils.class, this.tcObject, "logUtils null");
         }
         if (context == null) {
-            throw new HeatException(logUtils.getExceptionDetails() + "context null");
+            throw new HeatException(TestCaseUtils.class, this.tcObject, "context null");
         }
 
         //check if the test suite is runnable (in terms of enabled environments or test suite explicitly declared in the 'heatTest' system property)
@@ -158,9 +156,8 @@ public class TestCaseUtils {
             try {
                 testSuiteJsonFile = new File(getClass().getResource(testSuiteFilePath).getPath());
             } catch (NullPointerException oEx) {
-                logUtils.error("the file '{}' does not exist", testSuiteFilePath);
-                throw new HeatException(logUtils.getExceptionDetails()
-                        + "the file '" + testSuiteFilePath + "' does not exist");
+                logger.error(this.tcObject,"the file '{}' does not exist", testSuiteFilePath);
+                throw new HeatException(TestCaseUtils.class, this.tcObject, "the file '{}' does not exist", testSuiteFilePath);
             }
 
             try {
@@ -171,13 +168,13 @@ public class TestCaseUtils {
                 loadJsonSchemaForOutputValidation(testSuiteJsonPath);
                 iterator = getTestCaseIterator(testSuiteJsonPath);
             } catch (Exception oEx) {
-                logUtils.error("catched exception message: '{}' \n cause: '{}'",
+                logger.error(this.tcObject,"catched exception message: '{}' \n cause: '{}'",
                         oEx.getLocalizedMessage(), oEx.getCause());
-                throw new HeatException(logUtils.getExceptionDetails() + "catched exception '" + oEx.getLocalizedMessage() + "'");
+                throw new HeatException(TestCaseUtils.class, this.tcObject, "catched exception '{}'", oEx.getLocalizedMessage());
             }
         } else {
-            logUtils.debug("SKIPPED test suite");
-            throw new SkipException(logUtils.getTestCaseDetails() + "Skip test: this suite is not requested");
+            logger.debug(this.tcObject,"SKIPPED test suite");
+            throw new SkipException("[" + this.tcObject.getTestCaseName() + "] Skip test: this suite is not requested");
         }
         return iterator;
     }
@@ -269,10 +266,10 @@ public class TestCaseUtils {
                 outputStr = formatMatcher.group(group);
             }
         } catch (Exception oEx) {
-            logUtils.warning("Exception: stringToProcess = '{}'", stringToProcess);
-            logUtils.warning("Exception: patternForFormat = '{}'", patternForFormat);
-            logUtils.warning("Exception: group = '{}'", group);
-            logUtils.warning("Exception cause '{}'", oEx.getCause());
+            logger.warn(this.tcObject,"Exception: stringToProcess = '{}'", stringToProcess);
+            logger.warn(this.tcObject,"Exception: patternForFormat = '{}'", patternForFormat);
+            logger.warn(this.tcObject,"Exception: group = '{}'", group);
+            logger.warn(this.tcObject,"Exception cause '{}'", oEx.getCause());
         }
         return outputStr;
     }
@@ -292,7 +289,7 @@ public class TestCaseUtils {
                 outputStr = NO_MATCH;
             }
         } catch (Exception oEx) {
-            logUtils.warning("Exception cause '{}'", oEx.getCause());
+            logger.warn(this.tcObject,"Exception cause '{}'", oEx.getCause());
         }
         return outputStr;
     }
@@ -306,22 +303,20 @@ public class TestCaseUtils {
      * @param webappName name of the service under test
      * @param webappPath path of the service under test, referring to the specific environment
      * @param inputJsonPath path of the json input file
-     * @param logUtils utility for logging. It is good because it specifies exactly the class and the method the log is referred to.
      * @param eh environment handler, useful to manage environment variables
      * @return boolean value. 'true' if all the parameters are valid, 'false' otherwise.
      */
     public boolean isCommonParametersValid(String webappName,
         String webappPath,
         String inputJsonPath,
-        LoggingUtils logUtils,
         EnvironmentHandler eh) {
         boolean isValid = true;
         if (webappPath == null) {
-            logUtils.debug("webApp path (webapp = {}) is null", webappName);
+            logger.debug(this.tcObject,"webApp path (webapp = {}) is null", webappName);
             isValid = false;
         }
         if (inputJsonPath == null) {
-            logUtils.debug("json input file not specified");
+            logger.debug(this.tcObject,"json input file not specified");
             isValid = false;
         }
         String environmentUnderTest = eh.getEnvironmentUnderTest();
@@ -332,5 +327,9 @@ public class TestCaseUtils {
             }
         }
         return isValid;
+    }
+
+    public void setTcObject(TestCase tcObject) {
+        this.tcObject = tcObject;
     }
 }

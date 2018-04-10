@@ -18,6 +18,7 @@ package com.hotels.heat.core.utils;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.hotels.heat.core.handlers.TestCase;
 import org.testng.ITestContext;
 
 import com.jayway.restassured.response.Response;
@@ -38,8 +39,8 @@ public interface RunnerInterface {
 
     Iterator<Object[]> providerJson();
 
-    Map resolvePlaceholdersInTcParams(Map<String, Object> testCaseParams);
+    Map resolvePlaceholdersInTcParams(TestCase tcObject, Map<String, Object> testCaseParams);
 
-    void specificChecks(Map testCaseParams, Map<String, Response> rspRetrieved, String environment);
+    void specificChecks(TestCase tcObject, Map testCaseParams, Map<String, Response> rspRetrieved, String environment);
 
 }

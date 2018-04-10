@@ -21,7 +21,7 @@ import java.util.Map;
 import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.specificexception.HeatException;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 import com.jayway.restassured.response.Response;
 
@@ -38,11 +38,11 @@ public class DataExtractionSupport {
     public static final String REGEXP_MATCH_JSON_ELEMENT = "regexpToMatch";
     public static final String OCCURRENCE_JSON_ELEMENT = "occurrenceOf";
 
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
 
     private Map<Integer, Map<String, String>> retrievedParametersFlowMode;
 
-    public DataExtractionSupport(LoggingUtils logUtils) {
+    public DataExtractionSupport(Log logUtils) {
         this.logUtils = logUtils;
         this.retrievedParametersFlowMode = new HashMap<>();
     }

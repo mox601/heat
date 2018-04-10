@@ -18,7 +18,7 @@ package com.hotels.heat.core.handlers;
 import java.util.ArrayList;
 import java.util.Map;
 
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 
 /**
@@ -29,7 +29,7 @@ public class TestCaseMapHandler {
 
     private final Map<String, Object> testCaseMap;
     private final PlaceholderHandler placeholderHandler;
-    private final LoggingUtils logUtils;
+    private final Log logUtils;
 
 /**
  * TestCaseMapHandler constructor.

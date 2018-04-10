@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 import com.jayway.restassured.internal.http.Method;
 
 /**
@@ -34,7 +34,7 @@ import com.jayway.restassured.internal.http.Method;
 public class HttpRequestFormatter {
 
     private TestRequest tcRequest;
-    private LoggingUtils logUtils;
+    private Log logUtils;
 
     /**
      * Constructor of HTTPRequestFormatter object.
@@ -42,7 +42,7 @@ public class HttpRequestFormatter {
      * @param tcRequest objects that represent the test case that contains the HTTP request data
      * @param logUtils objects that contains test case information useful for logging
      */
-    public HttpRequestFormatter(TestRequest tcRequest, LoggingUtils logUtils) {
+    public HttpRequestFormatter(TestRequest tcRequest, Log logUtils) {
         this.tcRequest = tcRequest;
         this.logUtils = logUtils;
     }

@@ -23,7 +23,7 @@ import org.testng.ITestContext;
 import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.utils.TestCaseUtils;
-import com.hotels.heat.core.utils.log.LoggingUtils;
+import com.hotels.heat.core.utils.log.Log;
 
 import com.jayway.restassured.response.Response;
 
@@ -41,7 +41,7 @@ public class BasicFlowChecks extends BasicMultipleChecks {
 
     private final Map<Integer, Map<String, String>> retrievedParameters = new HashMap<>();
 
-    public BasicFlowChecks(LoggingUtils logUtils, TestCaseUtils tcUtils, ITestContext context) {
+    public BasicFlowChecks(Log logUtils, TestCaseUtils tcUtils, ITestContext context) {
         super(context);
     }
 
