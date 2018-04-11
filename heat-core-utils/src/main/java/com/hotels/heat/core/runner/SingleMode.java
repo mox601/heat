@@ -90,7 +90,7 @@ public class SingleMode extends TestBaseRunner {
     public void runningTest(Map testCaseParams) {
 
         this.currentTestCase = super.getCurrentTestCase();
-        super.populateTestCaseObjAtomicTc(testCaseParams, this.currentTestCase);
+        TestCase.populateTestCaseObjAtomicTc(testCaseParams, this.currentTestCase);
 
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance(); //TODO: is it really necessary????
 

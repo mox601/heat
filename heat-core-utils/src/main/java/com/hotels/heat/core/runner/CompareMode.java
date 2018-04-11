@@ -46,7 +46,7 @@ public class CompareMode extends TestBaseRunner {
     public void runningTest(Map testCaseParams) {
 
         this.tcObject = super.getCurrentTestCase();
-        super.populateTestCaseObjAtomicTc(testCaseParams, this.tcObject);
+        TestCase.populateTestCaseObjAtomicTc(testCaseParams, this.tcObject);
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
 
         if (!super.isTestCaseSkippable(this.tcObject, "", "")) {

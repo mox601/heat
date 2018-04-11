@@ -153,25 +153,6 @@ public class TestBaseRunner implements RunnerInterface {
     }
 
     /**
-     * Method to set useful parameters in the context managed by testNG.
-     * Parameters that will be set will be: 'testId', 'suiteDescription', 'tcDescription'
-     * @param testCaseParams Map containing test case parameters coming from the json input file
-     */
-    /*public void setContextAttributes(Map<String, Object> testCaseParams) {
-        String testCaseID = testCaseParams.get(ATTR_TESTCASE_ID).toString();
-        testContext.setAttribute(ATTR_TESTCASE_ID, testCaseID);
-        String suiteDescription = TestSuiteHandler.getInstance().getTestCaseUtils().getSuiteDescription();
-        testContext.setAttribute(SUITE_DESCRIPTION_CTX_ATTR, suiteDescription);
-        String testCaseDesc = testCaseParams.get(ATTR_TESTCASE_NAME).toString();
-        testContext.setAttribute(TC_DESCRIPTION_CTX_ATTR, testCaseDesc);
-    }*/
-
-    public static void populateTestCaseObjAtomicTc(Map testCaseParams, TestCase tcObjectInput) {
-        tcObjectInput.setTestCaseIdNumber(testCaseParams.get(ATTR_TESTCASE_ID).toString());
-        tcObjectInput.setTestCaseDescription(testCaseParams.get(ATTR_TESTCASE_DESCRIPTION).toString());
-    }
-
-    /**
      * Checks if the test case is skippable or not, basing on the name of the current test suite (if the system parameter 'heatTest' is set in the
      * test running command) and on other suppositions.
      * @param testCaseObj TestCase object
