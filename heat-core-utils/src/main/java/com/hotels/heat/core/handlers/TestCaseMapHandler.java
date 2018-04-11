@@ -29,7 +29,8 @@ public class TestCaseMapHandler {
 
     private final Map<String, Object> testCaseMap;
     private final PlaceholderHandler placeholderHandler;
-    private final Log logUtils;
+    private final Log logger = new Log(TestCaseMapHandler.class);
+    private TestCase tcObject;
 
 /**
  * TestCaseMapHandler constructor.
@@ -37,10 +38,10 @@ public class TestCaseMapHandler {
  * @param placeholderhandler is the PlaceholderHandler to use. It could contain some data coming from the parsing of
  * the first part of the json input file, so it is useful to pass it in the constructor
  */
-    public TestCaseMapHandler(Map testCaseMapInput, PlaceholderHandler placeholderhandler) {
+    public TestCaseMapHandler(TestCase tcObject, Map testCaseMapInput, PlaceholderHandler placeholderhandler) {
         this.placeholderHandler = placeholderhandler;
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
         this.testCaseMap = testCaseMapInput;
+        this.tcObject = tcObject;
     }
 
     /**
@@ -49,34 +50,34 @@ public class TestCaseMapHandler {
      * @return the same structure of the json input file, but with placeholders resolved
      */
     public Map<String, Object> retriveProcessedMap() {
-        logUtils.trace("input: '{}'", testCaseMap.toString());
+        logger.trace(this.tcObject, "input: '{}'", testCaseMap.toString());
         Map<String, Object> output = (Map<String, Object>) process(testCaseMap);
-        logUtils.trace("output: '{}'", output.toString());
+        logger.trace(this.tcObject, "output: '{}'", output.toString());
         return output;
     }
 
 
     private Object processString(Object input) {
         Object output = input;
-        logUtils.trace("OLD input:'{}'", input.toString());
+        logger.trace(this.tcObject, "OLD input:'{}'", input.toString());
         if (input.toString().contains(PlaceholderHandler.PLACEHOLDER_SYMBOL_BEGIN)) {
             output = placeholderHandler.placeholderProcessString((String) input);
         }
-        logUtils.trace("NEW input:'{}'", output.toString());
+        logger.trace(this.tcObject, "NEW input:'{}'", output.toString());
         return output;
     }
 
     private Object processMap(Object input) {
         Object output = input;
         ((Map<String, Object>) input).forEach((key, valueObj) -> {
-            logUtils.trace("key:'{}' / OLD value: '{}'", key, valueObj.toString());
+            logger.trace(this.tcObject, "key:'{}' / OLD value: '{}'", key, valueObj.toString());
             if (valueObj.getClass().equals(String.class)) {
                 valueObj = processString(valueObj);
             } else {
                 valueObj = process(valueObj);
             }
             ((Map<String, Object>) output).put(key, valueObj);
-            logUtils.trace("key:'{}' / NEW value: '{}'", key, valueObj.toString());
+            logger.trace(this.tcObject, "key:'{}' / NEW value: '{}'", key, valueObj.toString());
         });
 
         return output;
@@ -85,7 +86,7 @@ public class TestCaseMapHandler {
     private Object processArrayList(Object input) {
         Object output = input;
         ((ArrayList<Object>) input).forEach((valueObj) -> {
-            logUtils.trace("OLD value: '{}'", valueObj.toString());
+            logger.trace(this.tcObject, "OLD value: '{}'", valueObj.toString());
             int index = ((ArrayList<Object>) input).indexOf(valueObj);
             if (valueObj.getClass().equals(String.class)) {
                 valueObj = processString(valueObj);
@@ -93,7 +94,7 @@ public class TestCaseMapHandler {
                 valueObj = process(valueObj);
             }
             ((ArrayList<Object>) output).set(index, valueObj);
-            logUtils.trace("NEW value: '{}'", valueObj.toString());
+            logger.trace(this.tcObject, "NEW value: '{}'", valueObj.toString());
         });
 
 
@@ -103,8 +104,8 @@ public class TestCaseMapHandler {
     private Object process(Object input) {
         Object outputObj = input;
         String inputObjClass = input.getClass().getSimpleName();
-        logUtils.trace("Class of object to process: {}", inputObjClass);
-        logUtils.trace("BEFORE '{}'", input.toString());
+        logger.trace(this.tcObject, "Class of object to process: {}", inputObjClass);
+        logger.trace(this.tcObject, "BEFORE '{}'", input.toString());
         switch (inputObjClass) {
         case "String":
             outputObj = processString(input.toString());
@@ -116,10 +117,10 @@ public class TestCaseMapHandler {
             outputObj = processArrayList(input);
             break;
         default:
-            logUtils.debug("the object '{}' is not yet supported", inputObjClass);
+            logger.debug(this.tcObject, "the object '{}' is not yet supported", inputObjClass);
             break;
         }
-        logUtils.trace("AFTER '{}'", outputObj.toString());
+        logger.trace(this.tcObject, "AFTER '{}'", outputObj.toString());
         return outputObj;
     }
 

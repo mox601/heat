@@ -67,7 +67,8 @@ public class PlaceholderHandler {
     private static final String REGEXP_GET_STEP_OUTPUT_PARAM_NAME = ".*?\\$\\{getStep\\(.*?\\).getOutputParam\\((.*?)\\)\\}.*?";
     private static final String REGEXP_GET_STEP_NUMBER = ".*?\\$\\{getStep\\((.*?)\\).*?\\}.*?";
 
-    private final Log logUtils;
+    private Log logger = new Log(PlaceholderHandler.class);
+    private TestCase tcObject;
 
     private Map<String, HeatPlaceholderModuleProvider> providerMap;
 
@@ -80,15 +81,15 @@ public class PlaceholderHandler {
  so that it is possible to manage external libraries, preloaded variables and so on
  with specific placeholders.
      */
-    public PlaceholderHandler() {
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
+    public PlaceholderHandler(TestCase tcObject) {
         //here we are checking if there are some external libraries to load (see Java Service Provider Interface pattern)
         //providerMap contains placeholders (key) and the specific class instances that are able to manage them (value)
+        this.tcObject = tcObject;
         providerMap = new HashMap<>();
         ServiceLoader.load(HeatPlaceholderModuleProvider.class).forEach((provider) -> {
             providerMap = constructProviderMap(providerMap, provider.getHandledPlaceholders(), provider);
         });
-        this.logUtils.trace("found n. {} provider(s)", providerMap.size());
+        logger.trace(this.tcObject,"found n. {} provider(s)", providerMap.size());
         this.preloadedVariables = new HashMap<>();
         this.flowPreloadedVariables = new HashMap<>();
     }
@@ -105,13 +106,12 @@ public class PlaceholderHandler {
             List<String> handledPlaceholders,
             HeatPlaceholderModuleProvider provider) {
         try {
-            logUtils.trace("found provider for: {}", provider.getHandledPlaceholders());
+            logger.trace(this.tcObject,"found provider for: {}", provider.getHandledPlaceholders());
             handledPlaceholders.forEach((placeholder) -> {
                 providerMapInput.put(placeholder, provider);
             });
         } catch (Exception oEx) {
-            logUtils.error("catched exception message: '{}' \n cause: '{}'",
-                        oEx.getLocalizedMessage(), oEx.getCause());
+            logger.logException(this.getClass(), this.tcObject, oEx);
         }
 
         return providerMapInput;
@@ -129,7 +129,7 @@ public class PlaceholderHandler {
      * @return the processed string
      */
     public Object placeholderProcessString(String inputStr) {
-        logUtils.trace("inputStr = '{}'", inputStr);
+        logger.trace(this.tcObject,"inputStr = '{}'", inputStr);
         Object outputObj = inputStr;
         try {
             if (inputStr.contains(PLACEHOLDER_SYMBOL_BEGIN)) {
@@ -141,8 +141,7 @@ public class PlaceholderHandler {
                 outputObj = processPlaceholderFromExternalModules(outputObj.toString());
             }
         } catch (Exception oEx) {
-            logUtils.error("catched exception message: '{}' \n cause: '{}'",
-                        oEx.getLocalizedMessage(), oEx.getCause());
+            logger.logException(this.getClass(), this.tcObject, oEx);
         }
         return outputObj;
     }
@@ -155,6 +154,7 @@ public class PlaceholderHandler {
     private String processPathPlaceholder(String input) {
         String outputObj = input;
         if (response != null) {
+            logger.trace(this.tcObject,"processPathPlaceholder on string '{}'", input);
             outputObj = processGenericPlaceholders(input, REGEXP_PATH_PLACEHOLDER, this::getPathVar);
         }
         return outputObj;
@@ -163,6 +163,7 @@ public class PlaceholderHandler {
     private String getPathVar(Object inputObj) {
         TestCaseUtils testCaseUtils = TestSuiteHandler.getInstance().getTestCaseUtils();
         String jsonPathToRetrieve = testCaseUtils.regexpExtractor(inputObj.toString(), PATH_JSONPATH_REGEXP, 1);
+        logger.trace(this.tcObject,"jsonPath to retrieve: '{}'", jsonPathToRetrieve);
         return retriveStringFromPath(response, jsonPathToRetrieve);
     }
 
@@ -174,6 +175,7 @@ public class PlaceholderHandler {
     private String processCookiePlaceholder(String input) {
         String outputObj = input;
         if (response != null) {
+            logger.trace(this.tcObject,"processCookiePlaceholder on string '{}'", input);
             outputObj = processGenericPlaceholders(input, REGEXP_COOKIE_PLACEHOLDER, this::getCookieVar);
         }
         return outputObj;
@@ -182,6 +184,7 @@ public class PlaceholderHandler {
     private String getCookieVar(Object inputObj) {
         TestCaseUtils testCaseUtils = TestSuiteHandler.getInstance().getTestCaseUtils();
         String cookieNameToRetrieve = testCaseUtils.regexpExtractor(inputObj.toString(), REGEXP_COOKIE_JSONPATH, 1);
+        logger.trace(this.tcObject,"cookie name to retrieve '{}'", cookieNameToRetrieve);
         return response.getCookies().containsKey(cookieNameToRetrieve) ? response.getCookie(cookieNameToRetrieve) : inputObj.toString();
     }
 
@@ -193,6 +196,7 @@ public class PlaceholderHandler {
     public String processHeaderPlaceholder(String inputString) {
         String outputString = inputString;
         if (response != null) {
+            logger.trace(this.tcObject,"processHeaderPlaceholder on string '{}'", inputString);
             outputString = processGenericPlaceholders(inputString, REGEXP_HEADER_PLACEHOLDER, this::getHeaderVar);
         }
         return outputString;
@@ -201,6 +205,7 @@ public class PlaceholderHandler {
     private String getHeaderVar(String inputString) {
         TestCaseUtils testCaseUtils = TestSuiteHandler.getInstance().getTestCaseUtils();
         String headerNameToRetrieve = testCaseUtils.regexpExtractor(inputString, REGEXP_HEADER_JSONPATH, 1);
+        logger.trace(this.tcObject,"header name to retrieve '{}'", headerNameToRetrieve);
         return response.headers().hasHeaderWithName(headerNameToRetrieve) ? response.getHeader(headerNameToRetrieve) : inputString;
     }
 
@@ -216,13 +221,13 @@ public class PlaceholderHandler {
             try {
                 for (Map.Entry<String, HeatPlaceholderModuleProvider> entry : providerMap.entrySet()) {
                     if (outputObj.toString().contains(entry.getKey())) {
-                        HeatTestDetails testDetails = new HeatTestDetails(eh.getEnvironmentUnderTest(), logUtils.getTestCaseDetails());
-                        outputObj = (Map<String, String>) entry.getValue().getModuleInstance().process(outputObj.toString(), testDetails);
+                        HeatTestDetails testDetails = new HeatTestDetails(eh.getEnvironmentUnderTest(), this.tcObject.getTestCaseName());
+                        outputObj = (Map<String, String>) entry.getValue().getModuleInstance().process(outputObj.toString(), testDetails); //TODO pass the tcObject to the external module!!!!
                         break;
                     }
                 }
             } catch (Exception e) {
-                throw new HeatException("Error due to invoke external module '" + e.getLocalizedMessage() + "' \n cause: '" + e.getCause() + "'");
+                throw new HeatException(this.getClass(), this.tcObject, "Error due to invoke external module '{}' \n cause: '{}'", e.getLocalizedMessage(), e.getCause());
             }
         }
         return outputObj;
@@ -271,10 +276,10 @@ public class PlaceholderHandler {
             String modifiedString = "";
             String escapedPlaceholder = escapeRegexCharsInRegex(placeholder);
             String[] stringComponents = outputStr.split("((?<=" + escapedPlaceholder + ")|(?=" + escapedPlaceholder + "))");
-            logUtils.debug("strings.length : '{}'", stringComponents.length);
+            logger.debug(this.tcObject, "strings.length : '{}'", stringComponents.length);
             for (String stringComponent : stringComponents) {
                 if (stringComponent.equals(placeholder)) {
-                    logUtils.debug("substitution '{}'", placeholder);
+                    logger.debug(this.tcObject, "substitution '{}'", placeholder);
                     //modifiedString += getPreloadedVariable(placeholder);
                     modifiedString += substituctionFunct.apply(placeholder);
                 } else {
@@ -295,10 +300,10 @@ public class PlaceholderHandler {
             if (flowPreloadedVariables.get(stepNumber).containsKey(paramName)) {
                 outputString = flowPreloadedVariables.get(stepNumber).get(paramName);
             } else {
-                logUtils.error("The step {} has not generated any parameter whose name is {}", stepNumber, paramName);
+                logger.error(this.tcObject, "The step {} has not generated any parameter whose name is {}", stepNumber, paramName);
             }
         } else {
-            logUtils.error("The step {} has not generated any output parameter", stepNumber);
+            logger.error(this.tcObject, "The step {} has not generated any output parameter", stepNumber);
         }
         return outputString;
     }
@@ -338,10 +343,9 @@ public class PlaceholderHandler {
                 output = rsp.jsonPath(config).get(path).toString();
             }
         } catch (Exception oEx) {
-            logUtils.error("It is not possible to retrieve the jsonPath "
+            logger.error(this.tcObject, "It is not possible to retrieve the jsonPath "
                     + "('{}') from the current response. --> response: {}", path, rsp.asString());
-            throw new HeatException(logUtils.getExceptionDetails() + "It is not possible to retrieve the jsonPath (" + path
-                    + ") from the current response. --> response: " + rsp.asString());
+            throw new HeatException(this.getClass(), this.tcObject, "It is not possible to retrieve the jsonPath ({}) from the current response", path);
         }
         return output;
     }
@@ -359,8 +363,8 @@ public class PlaceholderHandler {
             try {
                 for (Map.Entry<String, Object> parameterObj : outputParams.entrySet()) {
                     Object parameterValue = parameterObj.getValue();
-                    logUtils.trace("parameterObj.getValue() = '{}'", parameterValue);
-                    logUtils.trace("parameterValue.getClass() = '{}'", parameterValue.getClass());
+                    logger.trace(this.tcObject, "parameterObj.getValue() = '{}'", parameterValue);
+                    logger.trace(this.tcObject, "parameterValue.getClass() = '{}'", parameterValue.getClass());
                     if (parameterValue.getClass().equals(String.class)) {
                         if (((String) parameterValue).contains(PLACEHOLDER_SYMBOL_BEGIN)) {
                             outputParams.put(parameterObj.getKey(), placeholderProcessString((String) parameterValue));
@@ -370,7 +374,7 @@ public class PlaceholderHandler {
                     }
                 }
             } catch (Exception oEx) {
-                logUtils.error("Exception = '{}'", oEx.getLocalizedMessage());
+                logger.logException(this.getClass(), this.tcObject, oEx);
             }
         } else {
             outputParams = requestParamsMap;
@@ -405,7 +409,7 @@ public class PlaceholderHandler {
                     outputStr = getSpecificPreloadValue(stringInput, preloadedObject);
                 }
             } else {
-                throw new HeatException(logUtils.getExceptionDetails() + "variable '" + outputStr + "' not correctly preloaded");
+                throw new HeatException(this.getClass(), this.tcObject, "Variable '{}' not correctly preloaded", outputStr);
             }
         }
         return outputStr;
@@ -422,7 +426,7 @@ public class PlaceholderHandler {
         try {
             String specificFieldReq = TestSuiteHandler.getInstance().getTestCaseUtils().regexpExtractor(stringInput, REGEXP_GET_PRELOAD_SPECIFIC_FIELD, 1);
 
-            logUtils.trace("specificFieldReq {}", specificFieldReq);
+            logger.trace(this.tcObject, "specificFieldReq {}", specificFieldReq);
 
             if (!loadedObject.getClass().equals(String.class)) {
 
@@ -433,8 +437,7 @@ public class PlaceholderHandler {
                 }
             }
         } catch (Exception oEx) {
-            logUtils.error("catched exception message: '{}' \n cause: '{}'",
-                        oEx.getLocalizedMessage(), oEx.getCause());
+            logger.logException(this.getClass(), this.tcObject, oEx);
         }
         return outputStr;
     }

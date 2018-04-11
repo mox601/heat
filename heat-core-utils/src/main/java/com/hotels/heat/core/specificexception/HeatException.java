@@ -34,4 +34,10 @@ public class HeatException extends Error {
         logger = new Log(InputClass);
         logger.error(tcObj, message, params);
     }
+
+    public HeatException(Class InputClass, TestCase tcObj, Exception oEx, String message, Object... params) {
+        logger = new Log(InputClass);
+        logger.error(tcObj, message, params);
+        logger.logException(oEx.getClass(), tcObj, oEx);
+    }
 }

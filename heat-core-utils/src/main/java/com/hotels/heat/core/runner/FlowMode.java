@@ -17,6 +17,8 @@ package com.hotels.heat.core.runner;
 
 import java.util.Map;
 
+import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.utils.log.Log;
 import org.testng.annotations.Test;
 
 import com.hotels.heat.core.checks.BasicFlowChecks;
@@ -32,36 +34,45 @@ import com.jayway.restassured.response.Response;
  */
 public class FlowMode extends TestBaseRunner {
 
+    private Log logger = new Log(FlowMode.class);
+    private TestCase tcObject;
+
     /**
      * Method that manages the execution of a single test case.
      * @param testCaseParams Map containing test case parameters coming from the json input file
      */
     @Test(dataProvider = "provider")
     public void runningTest(Map testCaseParams) {
-        TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
-        setContextAttributes(testCaseParams);
-        String testSuiteName = getTestContext().getName();
-        String testCaseId = testCaseParams.get(TestBaseRunner.ATTR_TESTCASE_ID).toString();
-        getTestContext().setAttribute(TestBaseRunner.ATTR_TESTCASE_ID, testCaseId);
 
-        if (!super.isTestCaseSkippable(testSuiteName, testCaseId, "", "")) {
-            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(testCaseParams);
-            getLogUtils().debug("test not skippable");
+        this.tcObject = super.getTcObject();
+        this.tcObject = super.populateTestCaseObjAtomicTc(testCaseParams, this.tcObject);
+        TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
+
+
+        if (!super.isTestCaseSkippable(this.tcObject, "", "")) { //TODO why are there webappName and webappPath in the check on skippability?????
+
+            logger.debug(this.tcObject, "Preliminary parsing of placeholders in this test case - start");
+            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(this.tcObject, testCaseParams);
+            logger.debug(this.tcObject, "Preliminary parsing of placeholders in this test case - end");
+
+            logger.debug(this.tcObject, "This test case is not skippable");
+
+
             RestAssuredRequestMaker restAssuredRequestMaker = new RestAssuredRequestMaker();
-            getLogUtils().debug("I'm going to execute 'retrieveInfo'");
-            BasicFlowChecks flowChecks = new BasicFlowChecks(getLogUtils(), testSuiteHandler.getTestCaseUtils(), getTestContext());
+
+            BasicFlowChecks flowChecks = new BasicFlowChecks(this.tcObject, testSuiteHandler.getTestCaseUtils());
             flowChecks.setRestAssuredRequestMaker(restAssuredRequestMaker);
 
-            TestCaseMapHandler tcMapHandler = new TestCaseMapHandler(testCaseParamsElaborated, getPlaceholderHandler());
+            TestCaseMapHandler tcMapHandler = new TestCaseMapHandler(this.tcObject, testCaseParamsElaborated, getPlaceholderHandler());
             Map<String, Object> elaboratedTestCaseParams = (Map) tcMapHandler.retriveProcessedMap();
             Map<String, Response> rspRetrieved = flowChecks.retrieveInfo(elaboratedTestCaseParams);
 
-            super.specificChecks(testCaseParamsElaborated, rspRetrieved, testSuiteHandler.getEnvironmentHandler().getEnvironmentUnderTest());
+            super.specificChecks(this.tcObject, testCaseParamsElaborated, rspRetrieved, testSuiteHandler.getEnvironmentHandler().getEnvironmentUnderTest());
 
         } else {
-            getLogUtils().trace("test skippable [{}]", testCaseId);
-            getTestContext().setAttribute(testSuiteName + TestBaseRunner.TESTCASE_ID_SEPARATOR + testCaseId,
-                    TestBaseRunner.STATUS_SKIPPED);
+            this.tcObject.setSkippable();
+            logger.trace(this.tcObject, "This test case is skippable");
         }
+        this.tcObject.resetTestCaseId();
     }
 }

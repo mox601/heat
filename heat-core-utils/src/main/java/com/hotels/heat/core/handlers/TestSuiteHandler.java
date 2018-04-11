@@ -38,7 +38,7 @@ public final class TestSuiteHandler {
     private TestCase tcObject;
 
     private TestSuiteHandler() {
-        tcUtils = new TestCaseUtils();
+        tcUtils = new TestCaseUtils(this.tcObject);
     }
 
     /**
@@ -51,6 +51,10 @@ public final class TestSuiteHandler {
         }
         return testSuiteHandler;
 
+    }
+
+    public void setTestCaseObj(TestCase tcObject) {
+        this.tcObject = tcObject;
     }
 
     public String getWebappName() {
@@ -82,7 +86,7 @@ public final class TestSuiteHandler {
     }
 
     public TestCaseUtils getTestCaseUtils() {
-        return tcUtils;
+        return new TestCaseUtils(this.tcObject);
     }
 
     public void setTestCaseObject(TestCase tcObjInput) {

@@ -17,6 +17,8 @@ package com.hotels.heat.core.runner;
 
 import java.util.Map;
 
+import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.utils.log.Log;
 import org.testng.Reporter;
 import org.testng.annotations.Test;
 
@@ -33,52 +35,51 @@ import com.jayway.restassured.response.Response;
  */
 public class CompareMode extends TestBaseRunner {
 
+    private Log logger = new Log(CompareMode.class);
+    private TestCase tcObject;
+
     /**
      * Method that manages the execution of a single test case.
      * @param testCaseParams Map containing test case parameters coming from the json input file
      */
     @Test(dataProvider = "provider")
     public void runningTest(Map testCaseParams) {
-        TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
-        setContextAttributes(testCaseParams);
-        String testSuiteName = getTestContext().getName();
-        String testCaseId = testCaseParams.get(TestBaseRunner.ATTR_TESTCASE_ID).toString();
-        getTestContext().setAttribute(TestBaseRunner.ATTR_TESTCASE_ID, testCaseId);
 
-        if (!super.isTestCaseSkippable(testSuiteName, testCaseId, "", "")) {
-            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(testCaseParams);
+        this.tcObject = super.getTcObject();
+        this.tcObject = super.populateTestCaseObjAtomicTc(testCaseParams, this.tcObject);
+        TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
+
+        if (!super.isTestCaseSkippable(this.tcObject, "", "")) {
+            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(this.tcObject, testCaseParams);
             try {
                 RestAssuredRequestMaker restAssuredRequestMaker = new RestAssuredRequestMaker();
-                BasicMultipleChecks compareChecks = new BasicMultipleChecks(getTestContext());
+                BasicMultipleChecks compareChecks = new BasicMultipleChecks(this.tcObject);
                 compareChecks.setRestAssuredRequestMaker(restAssuredRequestMaker);
                 Map<String, Response> rspRetrieved = compareChecks.retrieveInfo(testCaseParamsElaborated);
                 if (rspRetrieved.isEmpty()) {
-                    getLogUtils().debug("not any retrieved response");
+                    logger.debug(this.tcObject, "not any retrieved response");
                 } else {
                     rspRetrieved.entrySet().stream().forEach((entry) -> {
                         if (entry.getValue() == null) {
-                            getLogUtils().debug("RSP retrieved by {} --> null", entry.getKey());
+                            logger.debug(this.tcObject, "RSP retrieved by {} --> null", entry.getKey());
                         } else {
-                            getLogUtils().debug("RSP retrieved by {} --> {}",
+                            logger.debug(this.tcObject, "RSP retrieved by {} --> {}",
                                     entry.getKey(), entry.getValue().asString());
-                            Reporter.log(entry.getValue().asString());
+                            Reporter.log(entry.getValue().asString()); //TODO what is this REPORTER???????
                         }
                     });
                     compareChecks.expects(testSuiteHandler.getTestCaseUtils().getSystemParamOnBlocking(), testCaseParamsElaborated, rspRetrieved);
 
-                    super.specificChecks(testCaseParamsElaborated, rspRetrieved, testSuiteHandler.getEnvironmentHandler().getEnvironmentUnderTest());
+                    super.specificChecks(this.tcObject, testCaseParamsElaborated, rspRetrieved, testSuiteHandler.getEnvironmentHandler().getEnvironmentUnderTest());
 
 
                 }
             } catch (Exception oEx) {
-                getLogUtils().error("Exception ({}) occourred: '{}'", oEx.getClass(), oEx.getLocalizedMessage());
-                throw new HeatException(testSuiteHandler.getLogUtils().getExceptionDetails() + "Exception (" + oEx.getClass() + ") occourred: '"
-                        + oEx.getLocalizedMessage() + "'");
+                throw new HeatException(this.getClass(), this.tcObject, oEx);
             }
         } else {
-            getLogUtils().trace("test skippable [{}]", testCaseId);
-            getTestContext().setAttribute(testSuiteName + TestBaseRunner.TESTCASE_ID_SEPARATOR + testCaseId,
-                    TestBaseRunner.STATUS_SKIPPED);
+            this.tcObject.setSkippable();
+            logger.debug(this.tcObject, "This test case is skippable");
         }
     }
 

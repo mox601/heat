@@ -46,6 +46,7 @@ public class SingleMode extends TestBaseRunner {
     private String webappPath;
     private String webappName;
     private Log logger = new Log(SingleMode.class);
+    private TestCase tcObject;
 
     /**
      * Method that takes test suites parameters and sets some environment properties.
@@ -86,32 +87,38 @@ public class SingleMode extends TestBaseRunner {
      * @param testCaseParams Map containing test case parameters coming from the json input file
      */
     @Test(dataProvider = "provider")
-    public void runningTest(Map testCaseParams, ITestContext context) {
+    public void runningTest(Map testCaseParams) {
 
-        TestCase testCaseObj = retrieveTc(testCaseParams);
+        this.tcObject = super.getTcObject();
+        this.tcObject = super.populateTestCaseObjAtomicTc(testCaseParams, this.tcObject);
 
-        if (!super.isTestCaseSkippable(testCaseObj, webappName, webappPath)) {
-            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(testCaseObj, testCaseParams);
-            logger.debug(testCaseObj, "test not skippable");
-            Response apiResponse = executeRequest(testCaseObj, testCaseParamsElaborated, context);
+        TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance(); //TODO: is it really necessary????
 
-            TestSuiteHandler.getInstance().getTestCaseUtils().setWebappPath(webappPath);
-            BasicChecks basicChecks = new BasicChecks(testCaseObj);
+
+        if (!super.isTestCaseSkippable(this.tcObject, webappName, webappPath)) {
+            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(this.tcObject, testCaseParams);
+            logger.debug(this.tcObject, "test not skippable");
+            Response apiResponse = executeRequest(this.tcObject, testCaseParamsElaborated);
+
+            testSuiteHandler.getTestCaseUtils().setWebappPath(webappPath);
+            BasicChecks basicChecks = new BasicChecks(this.tcObject);
             basicChecks.setResponse(apiResponse);
             basicChecks.commonTestValidation(testCaseParamsElaborated);
 
             Map<String, Response> rspMap = new HashMap<>();
             rspMap.put(webappName, apiResponse);
 
-            super.specificChecks(testCaseObj, testCaseParamsElaborated, rspMap, TestSuiteHandler.getInstance().getEnvironmentHandler().getEnvironmentUnderTest());
+            super.specificChecks(this.tcObject, testCaseParamsElaborated, rspMap, testSuiteHandler.getEnvironmentHandler().getEnvironmentUnderTest());
 
         } else {
-            logger.trace(testCaseObj, "test skippable");
-            testCaseObj.setSkippable();
+            logger.trace(this.tcObject, "test skippable");
+            this.tcObject.setSkippable();
         }
+
+        this.tcObject.resetTestCaseId();
     }
 
-    private Response executeRequest(TestCase testCaseObj, Map testCaseParamsElaborated, ITestContext context) {
+    private Response executeRequest(TestCase testCaseObj, Map testCaseParamsElaborated) {
         Response apiRsp;
 
         try {
@@ -121,7 +128,7 @@ public class SingleMode extends TestBaseRunner {
 
             restAssuredRequestMaker.setBasePath(webappPath);
             TestRequest tr = restAssuredRequestMaker.buildRequestByParams(testCaseUtils.getHttpMethod(), testCaseParamsElaborated);
-            tr.getHeadersParams().put("X-Heat-Test-Id", context.getName() + "." + testCaseParamsElaborated.get("testId"));
+            tr.getHeadersParams().put("X-Heat-Test-Id", testCaseObj.getTestCaseName());
             apiRsp = restAssuredRequestMaker.executeTestRequest(tr);
             if (apiRsp == null) {
                 throw new HeatException(SingleMode.class, testCaseObj, "Exception: the service has provided a response null");

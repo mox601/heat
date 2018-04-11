@@ -18,6 +18,7 @@ package com.hotels.heat.core.checks;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.hotels.heat.core.handlers.TestCase;
 import org.testng.ITestContext;
 
 import com.hotels.heat.core.handlers.PlaceholderHandler;
@@ -37,12 +38,16 @@ public class BasicFlowChecks extends BasicMultipleChecks {
     private static final String FIELD_DELAY_BEFORE = "delayBefore";
     private static final String FIELD_DELAY_AFTER = "delayAfter";
 
-    private ITestContext context;
-
     private final Map<Integer, Map<String, String>> retrievedParameters = new HashMap<>();
 
-    public BasicFlowChecks(Log logUtils, TestCaseUtils tcUtils, ITestContext context) {
-        super(context);
+    private TestCase tcObject;
+    private TestCaseUtils tcUtils;
+    private Log logger = new Log(BasicFlowChecks.class);
+
+    public BasicFlowChecks(TestCase tcObject, TestCaseUtils tcUtils) {
+        super(tcObject);
+        this.tcObject = tcObject;
+        this.tcUtils = tcUtils;
     }
 
 
@@ -58,10 +63,11 @@ public class BasicFlowChecks extends BasicMultipleChecks {
             compactInfoToCompare(testCaseParamsInput);
             if (getIsRunnable()) {
                 int numberOfBlocks = getHttpMethods().size();
-                getLogUtils().trace("number of blocks to load: {}", numberOfBlocks);
+                logger.trace(this.tcObject, "number of blocks to load: {}", numberOfBlocks);
                 Map<String, Object> singleObjecs = getInputJsonObjs();
                 getSteps().forEach((blockID, singleBlockName) -> {
-                    getLogUtils().debug("loading the block id {}: '{}'", blockID, singleBlockName);
+                    logger.debug(this.tcObject, "loading the block id {}: '{}'", blockID, singleBlockName);
+                    this.tcObject.setStepId(blockID);
                     Map singleBlockObj = (Map) singleObjecs.get(singleBlockName);
 
                     if (!retrievedParameters.isEmpty()) {
@@ -73,30 +79,28 @@ public class BasicFlowChecks extends BasicMultipleChecks {
                     Response rspStep = retrieveSingleBlockRsp(singleBlockName, singleBlockObj);
                     respRetrieved.put(singleBlockName, rspStep);
                     Map<String, Object> inputJsonBlock = (Map<String, Object>) getInputJsonObjs().get(singleBlockName);
-                    getLogUtils().debug("starting common validation on the block n. {}: '{}'", blockID, singleBlockName);
+                    logger.debug(this.tcObject, "starting common validation on the block n. {}: '{}'", blockID, singleBlockName);
                     stepValidation(rspStep, blockID, inputJsonBlock);
 
-                    getLogUtils().debug("Retrieving the output parameters");
+                    logger.debug(this.tcObject, "Retrieving the output parameters");
                     if (inputJsonBlock.containsKey(OUTPUT_PARAMS_JSON_ELEMENT)) {
                         extractOutputDataFromResponse(blockID, inputJsonBlock, rspStep);
                     }
 
                     addDelayOnStep(singleBlockObj, FIELD_DELAY_AFTER);
-
+                    this.tcObject.resetStepId();
                 });
 
             }
         } catch (Exception oEx) {
-            getLogUtils().error("Exception message: '{}'", oEx.getLocalizedMessage());
-            throw new HeatException(getLogUtils().getExceptionDetails() + "message: " + oEx.getClass()
-                    + " / cause: " + oEx.getCause() + " / message: " + oEx.getLocalizedMessage());
+            throw new HeatException(this.getClass(), this.tcObject, oEx);
         }
         return respRetrieved;
     }
 
     private Map processJsonBlockWithPreviousStepsParameters(Map singleBlockObj) {
-        getLogUtils().debug("Processing the step before execution");
-        PlaceholderHandler placeholderHandler = new PlaceholderHandler();
+        logger.debug(this.tcObject, "Processing the step before execution");
+        PlaceholderHandler placeholderHandler = new PlaceholderHandler(this.tcObject);
         placeholderHandler.setFlowVariables(retrievedParameters);
         Map processedJsonBlock = placeholderHandler.placeholderProcessMap(singleBlockObj);
         return processedJsonBlock;
@@ -107,19 +111,18 @@ public class BasicFlowChecks extends BasicMultipleChecks {
         if (stepObject.containsKey(fieldName)) {
             int delayMs = Integer.valueOf(stepObject.get(fieldName).toString());
             try {
-                getLogUtils().info("Delay of {} ms", delayMs);
+                logger.info(this.tcObject, "Delay of {} ms", delayMs);
                 Thread.sleep(delayMs);
             } catch (InterruptedException ex) {
-                getLogUtils().error("Interrupted Exception during '{}' phase", fieldName);
+                logger.logException(this.getClass(), this.tcObject, ex, "Interrupted Exception during '{}' phase", fieldName);
             }
         }
     }
 
     private void stepValidation(Response stepResponse, Integer stepNumber, Map inputJsonBlock) {
-        BasicChecks basicChecks = new BasicChecks(getContext());
+        BasicChecks basicChecks = new BasicChecks(this.tcObject);
         basicChecks.setResponse(stepResponse);
-        getLogUtils().setFlowStep(stepNumber);
-        getLogUtils().debug("response: '{}'", stepResponse.asString());
+        logger.debug(this.tcObject, "response: '{}'", stepResponse.asString());
         basicChecks.setFlowOutputParameters(retrievedParameters);
         basicChecks.commonTestValidation(inputJsonBlock);
     }
@@ -136,7 +139,7 @@ public class BasicFlowChecks extends BasicMultipleChecks {
             retrievedParameters.put(blockID, new HashMap<>());
         }
         Map<String, String> tmp = retrievedParameters.get(blockID);
-        getLogUtils().debug("storing Step[{}].{} = '{}'", blockID, paramName, valueToStore);
+        logger.debug(this.tcObject, "storing Step[{}].{} = '{}'", blockID, paramName, valueToStore);
         tmp.put(paramName, valueToStore);
         retrievedParameters.put(blockID, tmp);
     }
@@ -144,9 +147,9 @@ public class BasicFlowChecks extends BasicMultipleChecks {
     private void extractOutputDataFromResponse(Integer blockID, Map<String, Object> inputJsonBlock, Response rsp) {
         Map<String, String> singleBlockOutputParam = (Map<String, String>) inputJsonBlock.get(OUTPUT_PARAMS_JSON_ELEMENT);
         singleBlockOutputParam.forEach((paramName, paramValue)-> {
-            getLogUtils().debug("storing '{}':'{}'", paramName, paramValue);
+            logger.debug(this.tcObject, "storing '{}':'{}'", paramName, paramValue);
 
-            PlaceholderHandler placeholderHandler = new PlaceholderHandler();
+            PlaceholderHandler placeholderHandler = new PlaceholderHandler(this.tcObject);
             placeholderHandler.setResponse(rsp);
             updateParameters(blockID, paramName, (String) placeholderHandler.placeholderProcessString(paramValue));
 

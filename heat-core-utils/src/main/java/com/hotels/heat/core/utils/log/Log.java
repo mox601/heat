@@ -83,6 +83,13 @@ public class Log {
                 tcObj.getTestCaseName(), oEx.getClass(), oEx.getCause(), oEx.getLocalizedMessage());
     }
 
+    public void logException(Class ExceptionClass, TestCase tcObj, Exception oEx, String message, Object... params) {
+        Logger logger = LoggerFactory.getLogger(ExceptionClass);
+        logger.error("[{}] >> {}", tcObj.getTestCaseName(), message, params);
+        logger.error("{} >> Exception: class {}, cause {}, message {}",
+                tcObj.getTestCaseName(), oEx.getClass(), oEx.getCause(), oEx.getLocalizedMessage());
+    }
+
     public void info(TestCase tcObj, String message, Object... params) {
         Logger logger = LoggerFactory.getLogger(this.InputClass);
         logger.info("[{}] >> {}", tcObj.getTestCaseName(), message, params);

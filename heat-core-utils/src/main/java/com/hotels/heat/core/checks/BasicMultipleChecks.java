@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
+import com.hotels.heat.core.handlers.TestCase;
 import org.testng.ITestContext;
 
 import com.hotels.heat.core.environment.EnvironmentHandler;
@@ -57,45 +58,34 @@ public class BasicMultipleChecks {
     private final Map<String, String> paths;
     private final Map<String, String> httpMethods;
 
-    private final Log logUtils;
-    private final ITestContext context;
+    private Log logger = new Log(BasicMultipleChecks.class);
+    protected TestCase tcObject;
 
     private Map<String, Object> inputJsonObjs = new HashMap<>();
     private RestAssuredRequestMaker restAssuredMsg;
 
 
-    public BasicMultipleChecks(ITestContext context) {
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
-        this.context = context;
+    public BasicMultipleChecks(TestCase tcObject) {
         this.steps = new TreeMap<>();
         this.paths = new HashMap<>();
         this.httpMethods = new HashMap<>();
+        this.tcObject = tcObject;
     }
-
-    public Log getLogUtils() {
-        return this.logUtils;
-    }
-
-    public ITestContext getContext() {
-        return this.context;
-    }
-
 
     /**
      * Flat the representation of test case's parameters in order to better analyze them.
      * @param testCaseParamsInput the input parameters to define a test case
      */
     public void compactInfoToCompare(Map<String, Object> testCaseParamsInput) {
-        EnvironmentHandler eh = TestSuiteHandler.getInstance().getEnvironmentHandler();
         List<Object> objectsToCompareList;
         if (testCaseParamsInput.containsKey(OBJECTS_TO_COMPARE_JSON_ELEMENT)) {
             objectsToCompareList = (List<Object>) testCaseParamsInput.get(OBJECTS_TO_COMPARE_JSON_ELEMENT);
         } else if (testCaseParamsInput.containsKey(E2E_FLOW_STEPS_JSON_ELEMENT)) {
             objectsToCompareList = (List<Object>) testCaseParamsInput.get(E2E_FLOW_STEPS_JSON_ELEMENT);
         } else {
-            throw new HeatException(this.logUtils.getExceptionDetails() + "it is not possible to retrieve a list of request objects");
+            throw new HeatException(this.getClass(), this.tcObject, "It is not possible to retrieve a list of request objects");
         }
-        this.logUtils.debug("objectsToCompareList size = {}", objectsToCompareList.size());
+        logger.debug(this.tcObject, "objectsToCompareList size = {}", objectsToCompareList.size());
         Iterator<Object> multipleListIterator = objectsToCompareList.iterator();
         while (multipleListIterator.hasNext()) {
             elaborateObjects(multipleListIterator);
@@ -113,15 +103,14 @@ public class BasicMultipleChecks {
         if (eh != null) {
             webappPath = eh.getEnvironmentUrl(webappName);
             if (webappPath == null || "".equals(webappPath)) {
-                this.logUtils.error("test not runnable");
-                throw new HeatException(this.logUtils.getExceptionDetails() + "test not runnable: webapp path not valid");
+                logger.error(this.tcObject, "test not runnable");
+                throw new HeatException(this.getClass(), this.tcObject, "test not runnable: webapp path not valid");
             } else if (webappPath == null) {
-                this.context.setAttribute(this.context.getAttribute(TestBaseRunner.ATTR_TESTCASE_ID).toString(), TestBaseRunner.STATUS_SKIPPED);
-                TestSuiteHandler.getInstance().getTestCaseUtils().setWebappPath(webappPath);
+                this.tcObject.setSkippable();
+                TestSuiteHandler.getInstance().getTestCaseUtils().setWebappPath(webappPath); //TODO is it really necessary????
             }
         } else {
-            this.logUtils.error("environment handler null");
-            throw new HeatException(this.logUtils.getExceptionDetails() + "test not runnable: environment handler not valid");
+            throw new HeatException(this.getClass(), this.tcObject, "test not runnable: environment handler not valid");
         }
         String httpMethod;
         if (!compareSingleObj.containsKey(TestCaseUtils.JSON_FIELD_HTTP_METHOD) || compareSingleObj.get(TestCaseUtils.JSON_FIELD_HTTP_METHOD) == null) {
@@ -141,7 +130,7 @@ public class BasicMultipleChecks {
                 Integer stepNumber = Integer.parseInt((String) compareSingleObj.get(TestCaseUtils.JSON_FIELD_STEP_NUMBER));
                 steps.put(stepNumber, singleBlockName);
             } catch (NumberFormatException nfe) {
-                throw new HeatException(this.logUtils.getExceptionDetails() + "test not runnable: 'stepNumber' field isn't an Integer value");
+                throw new HeatException(this.getClass(), this.tcObject, "test not runnable: 'stepNumber' field isn't an Integer value");
             }
         }
 
@@ -162,20 +151,20 @@ public class BasicMultipleChecks {
             compactInfoToCompare(testCaseParamsInput);
 
             if (isRunnableTest) {
-                this.logUtils.trace("number of blocks to load: {}", httpMethods.size());
+                logger.trace(this.tcObject, "number of blocks to load: {}", httpMethods.size());
                 httpMethods.entrySet().stream().map((entry) -> entry.getKey()).forEach((serviceId) -> {
                     Response rsp = retrieveSingleBlockRsp(serviceId);
 
                     if (rsp == null) {
-                        this.logUtils.debug("response for '{}' : null", serviceId);
+                        logger.debug(this.tcObject, "response for '{}' : null", serviceId);
                     } else {
-                        this.logUtils.debug("response for '{}': '{}'", serviceId, rsp.asString());
+                        logger.debug(this.tcObject, "response for '{}': '{}'", serviceId, rsp.asString());
                     }
                     respRetrieved.put(serviceId, rsp);
                 });
             }
         } catch (Exception oEx) {
-            this.logUtils.debug("Exception message: '{}'", oEx.getLocalizedMessage());
+            logger.logException(this.getClass(), this.tcObject, oEx);
         }
         return respRetrieved;
     }
@@ -196,14 +185,16 @@ public class BasicMultipleChecks {
         EnvironmentHandler eh = TestSuiteHandler.getInstance().getEnvironmentHandler();
         Method webappHttpMethod = Method.valueOf(httpMethods.get(serviceId));
         String webappPath = paths.get(serviceId);
-        this.logUtils.trace("path of block '{}': '{}'", serviceId, webappPath);
+        logger.trace(this.tcObject, "path of block '{}': '{}'", serviceId, webappPath);
+
         if (restAssuredMsg == null) {
-            throw new HeatException(this.logUtils.getExceptionDetails() + "restAssuredMsg obj null");
+            throw new HeatException(this.getClass(), this.tcObject, "restAssuredMsg obj null");
         }
+
         restAssuredMsg.setBasePath(eh.getEnvironmentUrl((String) singleInputJsonObj.get(WEBAPP_NAME_JSON_ELEMENT)));
         TestRequest testRequest = restAssuredMsg.buildRequestByParams(webappHttpMethod, singleInputJsonObj);
 
-        testRequest.getHeadersParams().put("X-Heat-Test-Id", context.getName() + "." + context.getAttribute(TestBaseRunner.ATTR_TESTCASE_ID));
+        testRequest.getHeadersParams().put("X-Heat-Test-Id", this.tcObject.getTestCaseName());
         Optional.ofNullable(singleInputJsonObj.get(TestCaseUtils.JSON_FIELD_STEP_NUMBER))
             .map(Object::toString)
             .ifPresent(step -> testRequest.getHeadersParams().put("X-Heat-Test-Step", step));
@@ -227,13 +218,13 @@ public class BasicMultipleChecks {
                 String checkStepDescription = getCheckDescription(singleBlockCheck);
                 boolean conditionOk = true;
                 if (singleBlockCheck.containsKey("condition")) {
-                    this.logUtils.debug("THERE IS A CONDITION");
+                    logger.debug(this.tcObject, "THERE IS A CONDITION");
                     conditionOk = conditionVerification((ArrayList<Object>) singleBlockCheck.get("condition"), mapServiceIdResponse, checkStepDescription + "(condition)");
                 }
                 if (conditionOk) {
                     singleBlockCheck(isBlocking, singleBlockCheck, mapServiceIdResponse, checkStepDescription);
                 } else {
-                    this.logUtils.debug("condition not verified for: '{}'", checkStepDescription);
+                    logger.debug(this.tcObject, "condition not verified for: '{}'", checkStepDescription);
                 }
             });
 
@@ -246,9 +237,7 @@ public class BasicMultipleChecks {
         try {
             description = (String) fieldCheck.get("description");
         } catch (Exception oEx) {
-            this.logUtils.error("Exception: class {}, cause {}, message {}",
-                    oEx.getClass(), oEx.getCause(), oEx.getLocalizedMessage());
-            throw new HeatException(this.logUtils.getExceptionDetails() + "It is not possible to retrieve the description of the check");
+            throw new HeatException(this.getClass(), this.tcObject, oEx, "It is not possible to retrieve the description of the check");
         }
         return description;
     }
@@ -256,21 +245,25 @@ public class BasicMultipleChecks {
 
     private boolean conditionVerification(ArrayList<Object> conditionArray, Map<String, Response> mapServiceIdResponse, String checkStepDescription) {
         boolean isConditionVerified = true;
-        this.logUtils.debug("There are {} conditions to verify", conditionArray.size());
-        this.logUtils.debug("{}", conditionArray.toString());
+        logger.debug(this.tcObject, "There are {} conditions to verify", conditionArray.size());
+        logger.debug(this.tcObject, "{}", conditionArray.toString());
         Iterator itr = conditionArray.iterator();
         while (itr.hasNext()) {
             isConditionVerified = isConditionVerified && singleBlockCheck(false, (Map<String, Object>) itr.next(), mapServiceIdResponse, checkStepDescription);
         }
-        this.logUtils.debug("{} Condition verified '{}'", checkStepDescription, isConditionVerified);
+        logger.debug(this.tcObject, "{} Condition verified '{}'", checkStepDescription, isConditionVerified);
         return isConditionVerified;
     }
 
     private boolean singleBlockCheck(boolean isBlocking, Map<String, Object> blockToCheck, Map<String, Response> mapServiceIdResponse, String checkStepDescription) {
         boolean isCheckOk = true;
-        this.logUtils.trace("{} block: {}", checkStepDescription, blockToCheck.toString());
-        BasicChecks basicChecks = new BasicChecks(this.context);
-        isCheckOk = basicChecks.executeCheck(isBlocking, blockToCheck, mapServiceIdResponse);
+        logger.trace(this.tcObject, "{} block: {}", checkStepDescription, blockToCheck.toString());
+        try {
+            BasicChecks basicChecks = new BasicChecks(this.tcObject);
+            isCheckOk = basicChecks.executeCheck(isBlocking, blockToCheck, mapServiceIdResponse);
+        } catch (Exception oEx) {
+            logger.logException(this.getClass(), this.tcObject, oEx, "Exception during a the check '{}'", checkStepDescription);
+        }
 
         return isCheckOk;
     }

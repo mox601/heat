@@ -43,10 +43,8 @@ import com.jayway.restassured.response.Response;
  */
 public class TestBaseRunner implements RunnerInterface {
 
-    private static Log logger = new Log(TestBaseRunner.class);
-
     static {
-        logger.info(TestCase.getInstance(), "\n\n"
+        (new Log(TestBaseRunner.class)).info(TestCase.getInstance(), "\n\n"
             + "      ___           ___           ___                 \n"
             + "     /__/\\         /  /\\         /  /\\          ___   \n"
             + "     \\  \\:\\       /  /:/_       /  /::\\        /  /\\  \n"
@@ -62,7 +60,7 @@ public class TestBaseRunner implements RunnerInterface {
     }
 
     public static final String ATTR_TESTCASE_ID = "testId";
-    public static final String ATTR_TESTCASE_NAME = "testName";
+    public static final String ATTR_TESTCASE_DESCRIPTION = "testName";
 
     public static final String STATUS_SKIPPED = "SKIPPED";
 
@@ -78,11 +76,10 @@ public class TestBaseRunner implements RunnerInterface {
     public static final String ENV_PROP_FILE_PATH = "envPropFilePath";
     public static final String INPUT_JSON_PATH = "inputJsonPath";
 
-    private ITestContext testContext;
-
     private PlaceholderHandler placeholderHandler;
     private String inputJsonPath;
     private TestCase tcObject = TestCase.getInstance();
+    private Log logger = new Log(TestBaseRunner.class);
 
     /**
      * Method that takes test suites parameters and sets some environment properties.
@@ -96,11 +93,13 @@ public class TestBaseRunner implements RunnerInterface {
     public void beforeTestSuite(String propFilePath,
                                 @Optional(NO_INPUT_WEBAPP_NAME) String inputWebappName,
                                 ITestContext context) {
+        logger.debug(this.tcObject, ">> Executing beforeTestSuite method");
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
         testSuiteHandler.setPropertyFilePath(propFilePath);
         testSuiteHandler.populateEnvironmentHandler();
-        populateTestCaseObject(testContext);
+        populateTestCaseObject(context);
         testSuiteHandler.setTestCaseObject(this.tcObject);
+        logger.debug(this.tcObject, ">> Ended beforeTestSuite method");
     }
 
     private void populateTestCaseObject(ITestContext context) {
@@ -122,14 +121,15 @@ public class TestBaseRunner implements RunnerInterface {
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
         testSuiteHandler.getEnvironmentHandler().setEnabledEnvironments(enabledEnvironments);
         inputJsonPath = inputJsonParamPath;
-        testContext = context;
     }
 
 
     @Override
     @DataProvider(name = "provider")
     public Iterator<Object[]> providerJson() {
-        Iterator<Object[]> it = TestSuiteHandler.getInstance().getTestCaseUtils().jsonReader(inputJsonPath, testContext);
+        TestSuiteHandler tcHandler = TestSuiteHandler.getInstance();
+        tcHandler.setTestCaseObj(this.tcObject);
+        Iterator<Object[]> it = tcHandler.getTestCaseUtils().jsonReader(inputJsonPath);
         return it;
     }
 
@@ -141,13 +141,11 @@ public class TestBaseRunner implements RunnerInterface {
     @Override
     public Map resolvePlaceholdersInTcParams(TestCase testCaseObj, Map<String, Object> testCaseParams) {
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
-        /*testSuiteHandler.getLogUtils().setTestCaseId(testContext.getAttribute(ATTR_TESTCASE_ID).toString());*/
-
         // now we start elaborating the parameters.
-        placeholderHandler = new PlaceholderHandler();
+        placeholderHandler = new PlaceholderHandler(testCaseObj);
         placeholderHandler.setPreloadedVariables(testSuiteHandler.getTestCaseUtils().getPreloadedVariables());
 
-        TestCaseMapHandler tcMapHandler = new TestCaseMapHandler(testCaseParams, placeholderHandler);
+        TestCaseMapHandler tcMapHandler = new TestCaseMapHandler(testCaseObj, testCaseParams, placeholderHandler);
 
         Map<String, Object> elaboratedTestCaseParams = (Map) tcMapHandler.retriveProcessedMap();
         testSuiteHandler.getTestCaseUtils().setTcParams(elaboratedTestCaseParams);
@@ -159,13 +157,21 @@ public class TestBaseRunner implements RunnerInterface {
      * Parameters that will be set will be: 'testId', 'suiteDescription', 'tcDescription'
      * @param testCaseParams Map containing test case parameters coming from the json input file
      */
-    public void setContextAttributes(Map<String, Object> testCaseParams) {
+    /*public void setContextAttributes(Map<String, Object> testCaseParams) {
         String testCaseID = testCaseParams.get(ATTR_TESTCASE_ID).toString();
         testContext.setAttribute(ATTR_TESTCASE_ID, testCaseID);
         String suiteDescription = TestSuiteHandler.getInstance().getTestCaseUtils().getSuiteDescription();
         testContext.setAttribute(SUITE_DESCRIPTION_CTX_ATTR, suiteDescription);
         String testCaseDesc = testCaseParams.get(ATTR_TESTCASE_NAME).toString();
         testContext.setAttribute(TC_DESCRIPTION_CTX_ATTR, testCaseDesc);
+    }*/
+
+    public static TestCase populateTestCaseObjAtomicTc(Map testCaseParams, TestCase tcObjectInput) {
+        TestCase tcObjectOutput = tcObjectInput;
+        tcObjectOutput.setTestCaseIdNumber(testCaseParams.get(ATTR_TESTCASE_ID).toString());
+        tcObjectOutput.setTestCaseDescription(testCaseParams.get(ATTR_TESTCASE_DESCRIPTION).toString());
+
+        return tcObjectOutput;
     }
 
     /**
@@ -179,7 +185,7 @@ public class TestBaseRunner implements RunnerInterface {
     public boolean isTestCaseSkippable(TestCase testCaseObj, String webappName, String webappPath) {
 
         String currentTestSuiteName = testCaseObj.getTestSuiteName();
-        String currentTestCaseId = testCaseObj.getTestIdNumber();
+        String currentTestCaseId = testCaseObj.getTestCaseIdNumber();
 
         boolean thisTestIsSkippable = false;
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
@@ -269,15 +275,19 @@ public class TestBaseRunner implements RunnerInterface {
         this.inputJsonPath = inputJsonPath;
     }
 
-    public ITestContext getTestContext() {
-        return testContext;
+    public TestCase getTcObject() {
+        return this.tcObject;
     }
 
-    public TestCase retrieveTc(Map testCaseParams) {
-        String testSuiteName = testContext.getName();
-        String testCaseId = testCaseParams.get(TestBaseRunner.ATTR_TESTCASE_ID).toString();
-        return TestCase.getInstance(testSuiteName, testCaseId);
-    }
+//    public ITestContext getTestContext() {
+//        return testContext;
+//    }
+
+//    public TestCase retrieveTc(Map testCaseParams) {
+//        String testSuiteName = testContext.getName();
+//        String testCaseId = testCaseParams.get(TestBaseRunner.ATTR_TESTCASE_ID).toString();
+//        return TestCase.getInstance(testSuiteName, testCaseId);
+//    }
 
 
 

@@ -85,10 +85,11 @@ public class TestCaseUtils {
      * preload variables coming from the json input file driving the test suite. Moreover it handles the running of any test cases
      * inside the suite.
      */
-    public TestCaseUtils() {
+    public TestCaseUtils(TestCase tcObject) {
         this.webappPath = "";
         this.httpMethod = Method.GET;
         this.suiteDescription = SUITE_DESCRIPTION_DEFAULT;
+        this.tcObject = tcObject;
     }
 
     private void loadGeneralSettings(JsonPath testSuiteJsonPath) {
@@ -110,7 +111,7 @@ public class TestCaseUtils {
         preloadVariables = testSuiteJsonPath.get(JSONPATH_PRELOAD_SECTION);
         if (preloadVariables != null && !preloadVariables.isEmpty()) {
             logger.debug(this.tcObject, "PRELOAD VARIABLES PRESENT");
-            placeholderHandler = new PlaceholderHandler();
+            placeholderHandler = new PlaceholderHandler(this.tcObject);
             for (Map.Entry<String, Object> entry : preloadVariables.entrySet()) {
                 preloadVariables.put(entry.getKey(), placeholderHandler.placeholderProcessString(entry.getValue().toString()));
                 logger.debug(this.tcObject, "PRELOADED VARIABLE: '{}' = '{}'", entry.getKey(), entry.getValue());
@@ -137,20 +138,19 @@ public class TestCaseUtils {
     /**
      * It is the method that handles the reading of the json input file that is driving the test suite.
      * @param testSuiteFilePath the path of the json input file
-     * @param context it is the context of the test. It is managed from TestNG but it can be used to set and read some parameters all over the test suite execution
      * @return the iterator of the test cases described in the json input file
      */
-    public Iterator<Object[]> jsonReader(String testSuiteFilePath, ITestContext context) {
+    public Iterator<Object[]> jsonReader(String testSuiteFilePath) {
         Iterator<Object[]> iterator = null;
         if (logger == null) {
             throw new HeatException(TestCaseUtils.class, this.tcObject, "logUtils null");
         }
-        if (context == null) {
+        if (this.tcObject == null) {
             throw new HeatException(TestCaseUtils.class, this.tcObject, "context null");
         }
 
         //check if the test suite is runnable (in terms of enabled environments or test suite explicitly declared in the 'heatTest' system property)
-        if (isTestSuiteRunnable(context.getName())) {
+        if (isTestSuiteRunnable(this.tcObject.getTestSuiteName())) { //TODO handle this check with the tcObject
             File testSuiteJsonFile;
 
             try {
@@ -266,10 +266,10 @@ public class TestCaseUtils {
                 outputStr = formatMatcher.group(group);
             }
         } catch (Exception oEx) {
-            logger.warn(this.tcObject,"Exception: stringToProcess = '{}'", stringToProcess);
-            logger.warn(this.tcObject,"Exception: patternForFormat = '{}'", patternForFormat);
-            logger.warn(this.tcObject,"Exception: group = '{}'", group);
-            logger.warn(this.tcObject,"Exception cause '{}'", oEx.getCause());
+            logger.warn(this.tcObject,"regexpExtractor warning: stringToProcess = '{}'", stringToProcess);
+            logger.warn(this.tcObject,"regexpExtractor warning: patternForFormat = '{}'", patternForFormat);
+            logger.warn(this.tcObject,"regexpExtractor warning: group = '{}'", group);
+            logger.warn(this.tcObject,"regexpExtractor warning: cause '{}'", oEx.getCause());
         }
         return outputStr;
     }
