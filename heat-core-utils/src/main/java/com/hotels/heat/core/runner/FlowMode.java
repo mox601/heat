@@ -44,8 +44,8 @@ public class FlowMode extends TestBaseRunner {
     @Test(dataProvider = "provider")
     public void runningTest(Map testCaseParams) {
 
-        this.tcObject = super.getTcObject();
-        this.tcObject = super.populateTestCaseObjAtomicTc(testCaseParams, this.tcObject);
+        this.tcObject = super.getCurrentTestCase();
+        super.populateTestCaseObjAtomicTc(testCaseParams, this.tcObject);
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
 
 

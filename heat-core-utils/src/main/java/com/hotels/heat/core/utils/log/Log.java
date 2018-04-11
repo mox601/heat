@@ -26,6 +26,7 @@ import ch.qos.logback.classic.Level;
  */
 public class Log {
 
+    //TODO substitute these strings with the proper logback enum
     public static final String LOG_LEVEL_INFO = "info";
     public static final String LOG_LEVEL_ERROR = "error";
     public static final String LOG_LEVEL_WARN = "warn";
@@ -39,7 +40,6 @@ public class Log {
 
     public Log(Class InputClass) {
         this.setLogLevel();
-        this.logLevel = LOG_LEVEL_INFO;
         this.InputClass = InputClass;
     }
 

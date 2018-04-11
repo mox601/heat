@@ -93,13 +93,13 @@ public class TestBaseRunner implements RunnerInterface {
     public void beforeTestSuite(String propFilePath,
                                 @Optional(NO_INPUT_WEBAPP_NAME) String inputWebappName,
                                 ITestContext context) {
-        logger.debug(this.tcObject, ">> Executing beforeTestSuite method");
+        //logger.debug(this.tcObject, ">> Executing beforeTestSuite method");
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
         testSuiteHandler.setPropertyFilePath(propFilePath);
         testSuiteHandler.populateEnvironmentHandler();
         populateTestCaseObject(context);
         testSuiteHandler.setTestCaseObject(this.tcObject);
-        logger.debug(this.tcObject, ">> Ended beforeTestSuite method");
+        //logger.debug(this.tcObject, ">> Ended beforeTestSuite method");
     }
 
     private void populateTestCaseObject(ITestContext context) {
@@ -166,12 +166,9 @@ public class TestBaseRunner implements RunnerInterface {
         testContext.setAttribute(TC_DESCRIPTION_CTX_ATTR, testCaseDesc);
     }*/
 
-    public static TestCase populateTestCaseObjAtomicTc(Map testCaseParams, TestCase tcObjectInput) {
-        TestCase tcObjectOutput = tcObjectInput;
-        tcObjectOutput.setTestCaseIdNumber(testCaseParams.get(ATTR_TESTCASE_ID).toString());
-        tcObjectOutput.setTestCaseDescription(testCaseParams.get(ATTR_TESTCASE_DESCRIPTION).toString());
-
-        return tcObjectOutput;
+    public static void populateTestCaseObjAtomicTc(Map testCaseParams, TestCase tcObjectInput) {
+        tcObjectInput.setTestCaseIdNumber(testCaseParams.get(ATTR_TESTCASE_ID).toString());
+        tcObjectInput.setTestCaseDescription(testCaseParams.get(ATTR_TESTCASE_DESCRIPTION).toString());
     }
 
     /**
@@ -275,7 +272,7 @@ public class TestBaseRunner implements RunnerInterface {
         this.inputJsonPath = inputJsonPath;
     }
 
-    public TestCase getTcObject() {
+    public TestCase getCurrentTestCase() {
         return this.tcObject;
     }
 
