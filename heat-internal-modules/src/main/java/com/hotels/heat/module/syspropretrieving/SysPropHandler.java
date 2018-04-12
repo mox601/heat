@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package com.hotels.heat.module.syspropretrieving;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.hotels.heat.core.log.Log;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,11 +30,12 @@ public class SysPropHandler {
     private static final String NO_PARAMS_FOUND = "NO_PARAMS_FOUND";
     private static final String NO_DEFAULT_FOUND = "NO_DEFAULT_FOUND";
     private static final String PROPERTIES_SEPARATOR = ",";
-    private Logger logger = LoggerFactory.getLogger(SysPropHandler.class);
-    private String testDetails = "";
 
-    public SysPropHandler(String testDetails) {
-        this.testDetails = testDetails;
+    private Log logger = new Log(SysPropHandler.class);
+    private TestCase tcObject;
+
+    public SysPropHandler(TestCase tcObject) {
+        this.tcObject = tcObject;
     }
 
     /**
@@ -97,7 +100,7 @@ public class SysPropHandler {
 
             }
         } catch (Exception oEx) {
-            logger.error("{} SysPropHandler - processString --> Exception occurred '{}' / description '{}'", testDetails, oEx.getClass(), oEx.getLocalizedMessage());
+            logger.logException(this.getClass(), this.tcObject, oEx, "processString exception ");
         }
         return outputString;
     }

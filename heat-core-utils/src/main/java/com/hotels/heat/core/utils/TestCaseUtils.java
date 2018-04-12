@@ -26,7 +26,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.hotels.heat.core.testcasedetails.TestCase;
-import org.testng.ITestContext;
 import org.testng.SkipException;
 
 import com.hotels.heat.core.environment.EnvironmentHandler;
@@ -34,7 +33,7 @@ import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.runner.TestBaseRunner;
 import com.hotels.heat.core.specificexception.HeatException;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 import com.jayway.restassured.internal.http.Method;
 import com.jayway.restassured.path.json.JsonPath;

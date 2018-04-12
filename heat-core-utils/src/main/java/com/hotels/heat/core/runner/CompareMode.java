@@ -18,7 +18,7 @@ package com.hotels.heat.core.runner;
 import java.util.Map;
 
 import com.hotels.heat.core.testcasedetails.TestCase;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 import org.testng.Reporter;
 import org.testng.annotations.Test;
 
@@ -52,7 +52,7 @@ public class CompareMode extends TestBaseRunner {
         if (!super.isTestCaseSkippable(this.tcObject, "", "")) {
             Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(this.tcObject, testCaseParams);
             try {
-                RestAssuredRequestMaker restAssuredRequestMaker = new RestAssuredRequestMaker();
+                RestAssuredRequestMaker restAssuredRequestMaker = new RestAssuredRequestMaker(this.tcObject);
                 BasicMultipleChecks compareChecks = new BasicMultipleChecks(this.tcObject);
                 compareChecks.setRestAssuredRequestMaker(restAssuredRequestMaker);
                 Map<String, Response> rspRetrieved = compareChecks.retrieveInfo(testCaseParamsElaborated);

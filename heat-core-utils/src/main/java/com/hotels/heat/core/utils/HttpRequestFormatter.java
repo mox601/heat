@@ -23,9 +23,10 @@ import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.apache.commons.io.IOUtils;
 
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 import com.jayway.restassured.internal.http.Method;
 
 /**
@@ -34,17 +35,19 @@ import com.jayway.restassured.internal.http.Method;
 public class HttpRequestFormatter {
 
     private TestRequest tcRequest;
-    private Log logUtils;
+
+    private Log logger = new Log(HttpRequestFormatter.class);
+    private TestCase tcObject;
 
     /**
      * Constructor of HTTPRequestFormatter object.
      * This class is useful to print (output console) the curl of the request just made. It prints the output only if in DEBUG log level mode.
      * @param tcRequest objects that represent the test case that contains the HTTP request data
-     * @param logUtils objects that contains test case information useful for logging
+     * @param tcObject objects that contains test case information useful for logging
      */
-    public HttpRequestFormatter(TestRequest tcRequest, Log logUtils) {
+    public HttpRequestFormatter(TestRequest tcRequest, TestCase tcObject) {
         this.tcRequest = tcRequest;
-        this.logUtils = logUtils;
+        this.tcObject = tcObject;
     }
 
     /**
@@ -94,7 +97,7 @@ public class HttpRequestFormatter {
                         try {
                             sb.append(readPostBodyFromFile(valueString));
                         } catch (IOException e) {
-                            logUtils.error("It's not possible to load body post data from: {}", valueString);
+                            logger.error(this.tcObject, "It's not possible to load body post data from: {}", valueString);
                             sb.append("");
                         }
                         sb.append("'");
@@ -158,7 +161,7 @@ public class HttpRequestFormatter {
         try {
             encodedValue = URLEncoder.encode(encodedValue, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            logUtils.error("Error during encoding of request value: {}", value);
+            logger.error(this.tcObject, "Error during encoding of request value: {}", value);
         }
         return encodedValue;
     }

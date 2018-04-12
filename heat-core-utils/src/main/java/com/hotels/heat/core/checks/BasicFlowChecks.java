@@ -19,12 +19,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.hotels.heat.core.testcasedetails.TestCase;
-import org.testng.ITestContext;
 
 import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.utils.TestCaseUtils;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 import com.jayway.restassured.response.Response;
 

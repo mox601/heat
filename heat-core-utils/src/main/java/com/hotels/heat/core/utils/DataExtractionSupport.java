@@ -22,7 +22,7 @@ import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.testcasedetails.TestCase;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 import com.jayway.restassured.response.Response;
 

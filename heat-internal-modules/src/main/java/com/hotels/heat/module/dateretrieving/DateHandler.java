@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package com.hotels.heat.module.dateretrieving;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.hotels.heat.core.log.Log;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -30,11 +32,11 @@ import org.slf4j.LoggerFactory;
  */
 public class DateHandler {
     private DateTimeFormatter dtfOut = DateTimeFormat.forPattern(DateHeatPlaceholderModule.TODAY_PLACEHOLDER_DEFAULT_PATTERN);
-    private Logger logger = LoggerFactory.getLogger(DateHandler.class);
-    private String testDetails = "";
+    private Log logger = new Log(DateHandler.class);
+    private TestCase tcObject;
 
-    public DateHandler(String testDetails) {
-        this.testDetails = testDetails;
+    public DateHandler(TestCase tcObject) {
+        this.tcObject = tcObject;
     }
 
     /**
@@ -83,7 +85,7 @@ public class DateHandler {
             if (todayMatcher.find()) {
                // there is an increment
                 increaseString = todayMatcher.group(0);
-                logger.debug("{} DateHandler - getDateTime --> there is an increase date = '{}'", testDetails, increaseString);
+                logger.debug(this.tcObject, "getDateTime --> there is an increase date = '{}'", increaseString);
             }
             increaseDays = Integer.parseInt(increaseString.substring(1));
             if (increaseString.startsWith("+")) {
@@ -94,7 +96,7 @@ public class DateHandler {
                 newDate = todayDate;
             }
         } catch (Exception oEx) {
-            logger.error("{} DateHandler - getDateTime >> exception: '{}'", testDetails, oEx.getLocalizedMessage());
+            logger.logException(this.getClass(), this.tcObject, oEx, "getDateTime exception");
             newDate = todayDate;
         }
         return newDate;
@@ -104,7 +106,7 @@ public class DateHandler {
         // if we have to process a String object, we can simply check if the string contains the required placeholder
         String outputStr = inputStr;
         try {
-            logger.trace("{} PlaceholderHandler - changeDatesPlaceholders --> inputStr = '{}'", testDetails, inputStr);
+            logger.trace(this.tcObject, "changeDatesPlaceholders --> inputStr = '{}'", inputStr);
             if (inputStr.contains(DateHeatPlaceholderModule.TODAY_PLACEHOLDER)) {
                 int i = 0;
                 while (outputStr.contains(DateHeatPlaceholderModule.TODAY_PLACEHOLDER)) {
@@ -115,10 +117,10 @@ public class DateHandler {
                     String strToReplace = outputStr.substring(beginninChar, endChar + beginninChar + 1);
                     if (isOutputString) {
                         if (strToReplace.contains("_")) {
-                            logger.trace("{} PlaceholderHandler - changeDatesPlaceholders --> required formatted date", testDetails);
+                            logger.trace(this.tcObject, "changeDatesPlaceholders --> required formatted date");
                             outputStr = outputStr.replace(strToReplace, String.valueOf(getFormattedDate(strToReplace)));
                         } else {
-                            logger.trace("{} PlaceholderHandler - changeDatesPlaceholders --> required Long date", testDetails);
+                            logger.trace(this.tcObject, "changeDatesPlaceholders --> required Long date");
                             outputStr = outputStr.replace(strToReplace, String.valueOf(getLongDate(strToReplace)));
                         }
                     } else {
@@ -127,8 +129,8 @@ public class DateHandler {
                 }
             }
         } catch (Exception oEx) {
-            logger.error("{} PlaceholderHandler - changeDatesPlaceholders --> Exception = '{}'", testDetails, oEx.getLocalizedMessage());
-            throw new InternalError(testDetails + "PlaceholderHandler - changeDatesPlaceholders --> Exception = '" + oEx.getLocalizedMessage() + "'");
+            logger.logException(this.getClass(), this.tcObject, oEx, "changeDatesPlaceholders exception");
+            throw new InternalError(this.tcObject.getTestCaseName() + "PlaceholderHandler - changeDatesPlaceholders --> Exception = '" + oEx.getLocalizedMessage() + "'");
         }
         return outputStr;
     }

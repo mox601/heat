@@ -29,7 +29,7 @@ import com.hotels.heat.core.heatmodules.HeatPlaceholderModuleProvider;
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.testcasedetails.TestCase;
 import com.hotels.heat.core.utils.TestCaseUtils;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 import com.jayway.restassured.path.json.config.JsonPathConfig;
 import com.jayway.restassured.response.Response;

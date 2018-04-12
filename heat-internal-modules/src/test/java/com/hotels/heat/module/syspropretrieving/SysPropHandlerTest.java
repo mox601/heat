@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.hotels.heat.module.syspropretrieving;
 
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -42,7 +43,7 @@ public class SysPropHandlerTest {
 
     @Test(enabled = true)
     public void testStringWithoutPlaceholder() {
-        underTest = new SysPropHandler("[testPlaceholderWithoutSysPropName]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String outputStr = underTest.processString("StringWithoutPlaceholder");
         Assert.assertEquals(outputStr, "StringWithoutPlaceholder");
     }
@@ -50,7 +51,7 @@ public class SysPropHandlerTest {
 
     @Test(enabled = true)
     public void testPlaceholderWithoutSysPropName() {
-        underTest = new SysPropHandler("[testPlaceholderWithoutSysPropName]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "}";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, inputString);
@@ -58,7 +59,7 @@ public class SysPropHandlerTest {
 
     @Test(enabled = true)
     public void testPlaceholderWithEmptySysPropName() {
-        underTest = new SysPropHandler("[testPlaceholderWithEmptySysPropName]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[]}";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, inputString);
@@ -66,7 +67,7 @@ public class SysPropHandlerTest {
 
     @Test(enabled = true)
     public void testPlaceholderWithoutSysPropName1() {
-        underTest = new SysPropHandler("[testPlaceholderWithoutSysPropName1]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = "STRING_" + SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "}_STRING";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, inputString);
@@ -74,7 +75,7 @@ public class SysPropHandlerTest {
 
     @Test(enabled = true)
     public void testPlaceholderWithEmptySysPropName1() {
-        underTest = new SysPropHandler("[testPlaceholderWithEmptySysPropName1]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = "STRING_" + SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[]}_STRING";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, inputString);
@@ -82,7 +83,7 @@ public class SysPropHandlerTest {
 
     @Test(enabled = true)
     public void testPlaceholderWithSysPropNotSetAndNoDefault() {
-        underTest = new SysPropHandler("[testPlaceholderWithSysPropNotSetAndNoDefault]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[" + PROPERTY_TO_TEST + "]}";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, inputString);
@@ -90,7 +91,7 @@ public class SysPropHandlerTest {
 
     @Test(enabled = true)
     public void testPlaceholderWithSysPropNotSetAndNoDefault1() {
-        underTest = new SysPropHandler("[testPlaceholderWithSysPropNotSetAndNoDefault1]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = "STRING_" + SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[" + PROPERTY_TO_TEST + "]}_STRING";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, inputString);
@@ -101,7 +102,7 @@ public class SysPropHandlerTest {
         //GIVEN
         System.setProperty(PROPERTY_TO_TEST, "PIPPO");
 
-        underTest = new SysPropHandler("[testPlaceholderWithSysPropSet]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[" + PROPERTY_TO_TEST + "]}";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, "PIPPO");
@@ -112,7 +113,7 @@ public class SysPropHandlerTest {
         //GIVEN
         System.setProperty(PROPERTY_TO_TEST, "PIPPO");
 
-        underTest = new SysPropHandler("[testPlaceholderWithSysPropSet1]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = "STRING_" + SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[" + PROPERTY_TO_TEST + "]}_STRING";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, "STRING_PIPPO_STRING");
@@ -120,7 +121,7 @@ public class SysPropHandlerTest {
 
     @Test(enabled = true)
     public void testPlaceholderWithSysPropSetToDefault() {
-        underTest = new SysPropHandler("[testPlaceholderWithSysPropSetToDefault]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[" + PROPERTY_TO_TEST + ",pippo_default]}";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, "pippo_default");
@@ -128,7 +129,7 @@ public class SysPropHandlerTest {
 
     @Test(enabled = true)
     public void testPlaceholderWithSysPropSetToDefault1() {
-        underTest = new SysPropHandler("[testPlaceholderWithSysPropSetToDefault1]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = "STRING_" + SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[" + PROPERTY_TO_TEST + ",pippo_default]}_STRING";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, "STRING_pippo_default_STRING");
@@ -139,7 +140,7 @@ public class SysPropHandlerTest {
         //GIVEN
         System.setProperty(PROPERTY_TO_TEST, "PIPPO");
 
-        underTest = new SysPropHandler("[testPlaceholderWithSysPropSetAndDefaultSet]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[" + PROPERTY_TO_TEST + ", pippo_default]}";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, "PIPPO");
@@ -150,7 +151,7 @@ public class SysPropHandlerTest {
         //GIVEN
         System.setProperty(PROPERTY_TO_TEST, "PIPPO");
 
-        underTest = new SysPropHandler("[testPlaceholderWithSysPropSetAndDefaultSet1]");
+        underTest = new SysPropHandler(TestCase.getInstance());
         String inputString = "STRING_" + SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER + "[" + PROPERTY_TO_TEST + ", pippo_default]}_STRING";
         String outputStr = underTest.processString(inputString);
         Assert.assertEquals(outputStr, "STRING_PIPPO_STRING");

@@ -16,7 +16,8 @@
 package com.hotels.heat.core.validations;
 
 import com.hotels.heat.core.handlers.AssertionHandler;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.testcasedetails.TestCase;
+import com.hotels.heat.core.log.Log;
 
 /**
  * String validator.
@@ -28,16 +29,18 @@ public class StringValidator {
     public static final String STRING_OPERATOR_NOT_EQUALS_TO = "not equals to";
 
     private final AssertionHandler assertionHandler;
-    private final Log logUtils;
+
+    private Log logger = new Log(StringValidator.class);
+    private TestCase tcObject;
 
     /**
      * Constructor of the string validator.
      * It supports validations between two strings (equals and not equals).
-     * @param logUtils logging utility
+     * @param tcObject logging utility
      */
-    public StringValidator(Log logUtils) {
-        this.logUtils = logUtils;
-        this.assertionHandler = new AssertionHandler();
+    public StringValidator(TestCase tcObject) {
+        this.tcObject = tcObject;
+        this.assertionHandler = new AssertionHandler(this.tcObject);
     }
 
 
@@ -51,7 +54,7 @@ public class StringValidator {
      * @return true if the check is OK, false otherwise
      */
     public boolean stringEqualChecks(boolean isBlocking, String operation, String stringToCheck, String stringExpected, String checkDescription) {
-        logUtils.trace("Requested operation '{}'", operation);
+        logger.trace(this.tcObject, "Requested operation '{}'", operation);
         boolean isCheckOk = true;
         switch (operation) {
         case StringValidator.STRING_OPERATOR_NOT_EQUALS_TO:
@@ -61,10 +64,10 @@ public class StringValidator {
             isCheckOk = assertionHandler.assertion(isBlocking, "assertEquals", checkDescription, stringToCheck, stringExpected);
             break;
         default:
-            logUtils.trace("None of the operations matched, proceed with other validator classes.");
+            logger.trace(this.tcObject, "None of the operations matched, proceed with other validator classes.");
             break;
         }
-        logUtils.trace("check execution: {}", isCheckOk ? "OK" : "NOT OK");
+        logger.trace(this.tcObject, "check execution: {}", isCheckOk ? "OK" : "NOT OK");
         return isCheckOk;
     }
 }

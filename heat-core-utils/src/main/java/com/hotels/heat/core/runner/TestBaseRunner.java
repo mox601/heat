@@ -33,7 +33,7 @@ import com.hotels.heat.core.handlers.TestCaseMapHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.heatspecificchecks.SpecificChecks;
 import com.hotels.heat.core.utils.RunnerInterface;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 import com.jayway.restassured.response.Response;
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.hotels.heat.core.environment;
 import static org.mockito.BDDMockito.given;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.junit.runner.RunWith;
 
 import org.mockito.InjectMocks;
@@ -66,7 +67,7 @@ public class EnvironmentHandlerTest {
         System.setProperty("webappName", "WEBAPP_UNDER_TEST");
 
 
-        underTest = new EnvironmentHandler(inputPh);
+        underTest = new EnvironmentHandler(inputPh, TestCase.getInstance());
         underTest.setEnabledEnvironments("ENV_UNDER_TEST,ENV_NOT_UNDER_TEST");
 
         Assert.assertEquals(underTest.getDefaultEnvironment(), "DEFAULT");
@@ -97,7 +98,7 @@ public class EnvironmentHandlerTest {
         System.setProperty("webappName", "WEBAPP_UNDER_TEST");
 
 
-        underTest = new EnvironmentHandler(inputPh);
+        underTest = new EnvironmentHandler(inputPh, TestCase.getInstance());
         underTest.setEnabledEnvironments("ENV_UNDER_TEST,ENV_NOT_UNDER_TEST");
 
         Assert.assertEquals(underTest.getDefaultEnvironment(), "DEFAULT");
@@ -129,7 +130,7 @@ public class EnvironmentHandlerTest {
         System.setProperty("webappName", "WEBAPP_UNDER_TEST");
 
 
-        underTest = new EnvironmentHandler(inputPh);
+        underTest = new EnvironmentHandler(inputPh, TestCase.getInstance());
         underTest.setEnabledEnvironments("ENV_UNDER_TEST,ENV_NOT_UNDER_TEST");
 
         Assert.assertEquals(underTest.getDefaultEnvironment(), "DEFAULT");
@@ -160,7 +161,7 @@ public class EnvironmentHandlerTest {
         System.setProperty("webappName", "WEBAPP_UNDER_TEST");
 
 
-        underTest = new EnvironmentHandler(inputPh);
+        underTest = new EnvironmentHandler(inputPh, TestCase.getInstance());
         underTest.setEnabledEnvironments("ENV_UNDER_TEST,ENV_NOT_UNDER_TEST");
 
         Assert.assertEquals(underTest.getDefaultEnvironment(), "DEFAULT");
@@ -191,7 +192,7 @@ public class EnvironmentHandlerTest {
         System.setProperty("webappName", "WEBAPP_UNDER_TEST");
 
 
-        underTest = new EnvironmentHandler(inputPh);
+        underTest = new EnvironmentHandler(inputPh, TestCase.getInstance());
         underTest.setEnabledEnvironments("ENV_UNDER_TEST,ENV_NOT_UNDER_TEST");
 
         Assert.assertEquals(underTest.getDefaultEnvironment(), "DEFAULT");
@@ -223,7 +224,7 @@ public class EnvironmentHandlerTest {
 
         //PowerMockito.whenNew(PropertyHandler.class).withArguments("PROPERTY_FILE_PATH", logUtils).thenReturn(inputPh);
 
-        underTest = new EnvironmentHandler("src/test/resources/environmentSettingsForTest/environment.properties");
+        underTest = new EnvironmentHandler("src/test/resources/environmentSettingsForTest/environment.properties", TestCase.getInstance());
         underTest.setEnabledEnvironments("ENV_UNDER_TEST,ENV_NOT_UNDER_TEST");
 
         Assert.assertEquals(underTest.getDefaultEnvironment(), "DEFAULT");

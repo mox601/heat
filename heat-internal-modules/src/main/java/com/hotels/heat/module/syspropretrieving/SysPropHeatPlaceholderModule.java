@@ -18,8 +18,8 @@ package com.hotels.heat.module.syspropretrieving;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hotels.heat.core.handlers.TestCase;
 import com.hotels.heat.core.heatmodules.HeatPlaceholderModule;
+import com.hotels.heat.core.testcasedetails.TestCase;
 
 /**
  * Heat internal module that manages the system property retrieving.
@@ -30,6 +30,8 @@ public final class SysPropHeatPlaceholderModule implements HeatPlaceholderModule
     public static final String SYS_PROP_PLACEHOLDER_KEYWORD = "SysProp";
     public static final String SYS_PROP_PLACEHOLDER = "${" + SYS_PROP_PLACEHOLDER_KEYWORD; //${SysProp
     private static SysPropHeatPlaceholderModule sysPropInstance;
+
+    private TestCase tcObject;
 
     private SysPropHeatPlaceholderModule() {
 
@@ -44,10 +46,11 @@ public final class SysPropHeatPlaceholderModule implements HeatPlaceholderModule
 
     @Override
     public Map<String, String> process(String stringToProcess, TestCase tcObject) {
+        this.tcObject = tcObject;
         Map<String, String> processedMap = new HashMap<>();
         processedMap.put(SysPropHeatPlaceholderModule.DEFAULT_PRELOADED_VALUE, stringToProcess);
 
-        SysPropHandler sysPropHandler = new SysPropHandler(tcObject.getTestCaseDescription());
+        SysPropHandler sysPropHandler = new SysPropHandler(this.tcObject);
         if (stringToProcess.contains(SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER)) {
             processedMap.put(SysPropHeatPlaceholderModule.DEFAULT_PRELOADED_VALUE, sysPropHandler.processString(stringToProcess));
         }

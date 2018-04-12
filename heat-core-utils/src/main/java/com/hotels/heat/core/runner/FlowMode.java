@@ -18,7 +18,7 @@ package com.hotels.heat.core.runner;
 import java.util.Map;
 
 import com.hotels.heat.core.testcasedetails.TestCase;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 import org.testng.annotations.Test;
 
 import com.hotels.heat.core.checks.BasicFlowChecks;
@@ -58,7 +58,7 @@ public class FlowMode extends TestBaseRunner {
             logger.debug(this.tcObject, "This test case is not skippable");
 
 
-            RestAssuredRequestMaker restAssuredRequestMaker = new RestAssuredRequestMaker();
+            RestAssuredRequestMaker restAssuredRequestMaker = new RestAssuredRequestMaker(this.tcObject);
 
             BasicFlowChecks flowChecks = new BasicFlowChecks(this.tcObject, testSuiteHandler.getTestCaseUtils());
             flowChecks.setRestAssuredRequestMaker(restAssuredRequestMaker);

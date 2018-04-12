@@ -28,11 +28,11 @@ public abstract class SpecificChecks {
 
     public void process(Map testCaseParamenter, Map<String, Response> responsesRetrieved, TestCase testCaseDetails, String environment) {
         if (this.handledSuites().contains(testCaseDetails.getTestSuiteName())) {
-            this.process(testCaseParamenter, responsesRetrieved, testCaseDetails, environment, ""); //TODO ....!!!!!!
+            this.process(testCaseParamenter, responsesRetrieved, testCaseDetails, environment);
         }
     }
 
-    protected abstract void process(Map testCaseParameter, Map<String, Response> responsesRetrieved, TestCase testCaseDetails, String environment, String pippo);
+    protected abstract void process(Map testCaseParameter, Map<String, Response> responsesRetrieved, TestCase testCaseDetails, String environment);
 
     protected abstract Set<String> handledSuites();
 

@@ -38,7 +38,7 @@ public class TestCaseUtilsTest {
         this.underTest = new TestCaseUtils(tcObject);
 
         System.setProperty("environment", "env1");
-        EnvironmentHandler eh = new EnvironmentHandler("envPropFilePath");
+        EnvironmentHandler eh = new EnvironmentHandler("envPropFilePath", TestCase.getInstance());
         eh.setEnabledEnvironments("env1,env2,env3");
 
         TestSuiteHandler.getInstance().setEnvironmentHandler(eh);

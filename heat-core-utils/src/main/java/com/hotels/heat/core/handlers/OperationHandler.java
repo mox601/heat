@@ -25,7 +25,7 @@ import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.testcasedetails.TestCase;
 import com.hotels.heat.core.utils.DataExtractionSupport;
 import com.hotels.heat.core.utils.TestCaseUtils;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 import com.hotels.heat.core.validations.ArithmeticalValidator;
 import com.hotels.heat.core.validations.StringValidator;
 
@@ -193,12 +193,12 @@ public class OperationHandler {
             String fieldCheckFormat) {
         boolean isExecutionOk;
         if (isItMathematicalCheck(operationToExecute)) {
-            aritmeticalValidator = new ArithmeticalValidator(logUtils);
+            aritmeticalValidator = new ArithmeticalValidator(this.tcObject);
             isExecutionOk = aritmeticalValidator.mathematicalChecks(isBlocking, operationToExecute, processedActualValue, expectedValue, checkDescription, fieldCheckFormat);
         } else {
-            stringValidator = new StringValidator(logUtils);
+            stringValidator = new StringValidator(this.tcObject);
             isExecutionOk = stringValidator.stringEqualChecks(isBlocking, operationToExecute, processedActualValue, expectedValue,
-                    logUtils.getTestCaseDetails() + " " + checkDescription + " -->");
+                    checkDescription + " -->");
         }
         return isExecutionOk;
     }

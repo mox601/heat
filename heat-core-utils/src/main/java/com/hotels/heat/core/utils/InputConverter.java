@@ -18,7 +18,7 @@ package com.hotels.heat.core.utils;
 import java.math.BigDecimal;
 
 import com.hotels.heat.core.testcasedetails.TestCase;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 
 /**
@@ -40,7 +40,7 @@ public class InputConverter {
      */
     public Integer convertToInt(String stringToInt) {
         Integer stringAsInt = new Double(stringToInt).intValue();
-        logUtils.trace(LOG_VALUE, stringToInt, stringAsInt);
+        logger.trace(this.tcObject, LOG_VALUE, stringToInt, stringAsInt);
         return stringAsInt;
     }
 
@@ -51,7 +51,7 @@ public class InputConverter {
      */
     public Double convertToDouble(String stringToDouble) {
         Double stringAsDouble = Double.parseDouble(stringToDouble);
-        logUtils.trace(LOG_VALUE, stringToDouble, stringAsDouble);
+        logger.trace(this.tcObject, LOG_VALUE, stringToDouble, stringAsDouble);
         return stringAsDouble;
     }
 
@@ -62,7 +62,7 @@ public class InputConverter {
      */
     public BigDecimal convertToBigDecimal(String stringToBigDecimal) {
         BigDecimal stringAsBigDecimal = new BigDecimal(stringToBigDecimal.replaceAll("[^.\\d]", "")).setScale(1);
-        logUtils.trace(LOG_VALUE, stringToBigDecimal, stringAsBigDecimal);
+        logger.trace(this.tcObject, LOG_VALUE, stringToBigDecimal, stringAsBigDecimal);
         return stringAsBigDecimal;
     }
 
@@ -73,7 +73,7 @@ public class InputConverter {
      */
     public Boolean convertToBoolean(String stringToBoolean) {
         Boolean stringAsBoolean = Boolean.valueOf(stringToBoolean);
-        logUtils.trace(LOG_VALUE, stringToBoolean, stringAsBoolean);
+        logger.trace(this.tcObject, LOG_VALUE, stringToBoolean, stringAsBoolean);
         return stringAsBoolean;
     }
 }

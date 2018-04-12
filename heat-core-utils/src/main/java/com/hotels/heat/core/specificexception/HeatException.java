@@ -16,7 +16,7 @@
 package com.hotels.heat.core.specificexception;
 
 import com.hotels.heat.core.testcasedetails.TestCase;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 /**
  * Specific exception for heat test framework.

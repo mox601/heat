@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.hotels.heat.core.testcasedetails.TestCase;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
@@ -46,7 +46,7 @@ public class SingleMode extends TestBaseRunner {
     private String webappPath;
     private String webappName;
     private Log logger = new Log(SingleMode.class);
-    private TestCase currentTestCase;
+    private TestCase tcObject;
 
     /**
      * Method that takes test suites parameters and sets some environment properties.
@@ -89,40 +89,40 @@ public class SingleMode extends TestBaseRunner {
     @Test(dataProvider = "provider")
     public void runningTest(Map testCaseParams) {
 
-        this.currentTestCase = super.getCurrentTestCase();
-        TestCase.populateTestCaseObjAtomicTc(testCaseParams, this.currentTestCase);
+        this.tcObject = super.getCurrentTestCase();
+        TestCase.populateTestCaseObjAtomicTc(testCaseParams, this.tcObject);
 
         TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance(); //TODO: is it really necessary????
 
 
-        if (!super.isTestCaseSkippable(this.currentTestCase, webappName, webappPath)) {
-            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(this.currentTestCase, testCaseParams);
-            logger.debug(this.currentTestCase, "test case not skippable");
-            Response apiResponse = executeRequest(this.currentTestCase, testCaseParamsElaborated);
+        if (!super.isTestCaseSkippable(this.tcObject, webappName, webappPath)) {
+            Map  testCaseParamsElaborated = super.resolvePlaceholdersInTcParams(this.tcObject, testCaseParams);
+            logger.debug(this.tcObject, "test case not skippable");
+            Response apiResponse = executeRequest(this.tcObject, testCaseParamsElaborated);
 
             testSuiteHandler.getTestCaseUtils().setWebappPath(webappPath);
-            BasicChecks basicChecks = new BasicChecks(this.currentTestCase);
+            BasicChecks basicChecks = new BasicChecks(this.tcObject);
             basicChecks.setResponse(apiResponse);
             basicChecks.commonTestValidation(testCaseParamsElaborated);
 
             Map<String, Response> rspMap = new HashMap<>();
             rspMap.put(webappName, apiResponse);
 
-            super.specificChecks(this.currentTestCase, testCaseParamsElaborated, rspMap, testSuiteHandler.getEnvironmentHandler().getEnvironmentUnderTest());
+            super.specificChecks(this.tcObject, testCaseParamsElaborated, rspMap, testSuiteHandler.getEnvironmentHandler().getEnvironmentUnderTest());
 
         } else {
-            logger.trace(this.currentTestCase, "test case skippable");
-            this.currentTestCase.setSkippable();
+            logger.trace(this.tcObject, "test case skippable");
+            this.tcObject.setSkippable();
         }
 
-        this.currentTestCase.resetTestCaseId();
+        this.tcObject.resetTestCaseId();
     }
 
     private Response executeRequest(TestCase testCaseObj, Map testCaseParamsElaborated) {
         Response apiRsp;
 
         try {
-            RestAssuredRequestMaker restAssuredRequestMaker = new RestAssuredRequestMaker();
+            RestAssuredRequestMaker restAssuredRequestMaker = new RestAssuredRequestMaker(this.tcObject);
             TestCaseUtils testCaseUtils = TestSuiteHandler.getInstance().getTestCaseUtils();
             testCaseUtils.setTcParams(testCaseParamsElaborated);
 

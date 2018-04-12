@@ -19,6 +19,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.hotels.heat.core.log.Log;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +34,8 @@ import com.jayway.restassured.response.Response;
  */
 
 public class ExampleSpecificChecks extends SpecificChecks {
-    private final Logger logger = LoggerFactory.getLogger(ExampleSpecificChecks.class);
+
+    private Log logger = new Log(ExampleSpecificChecks.class);
 
 /**
  * Method in which we can specify all test suites involved in this specific check.
@@ -49,12 +52,12 @@ public class ExampleSpecificChecks extends SpecificChecks {
  * Method of the real specific check.
  * @param testCaseParamenter parameters passed from the json input file. It contains all the single "test case" section, with request and expectations
  * @param responsesRetrieved it is the response retrieved from the service under test
- * @param testRef string with test details (test suite and test case)
+ * @param tcObject string with test details (test suite and test case)
  * @param environment string representing the name of the environment under test
  */
     @Override
-    public void process(Map testCaseParamenter, Map<String, Response> responsesRetrieved, String testRef, String environment) {
-        logger.debug("{} ExampleSpecificChecks::process", testRef);
+    public void process(Map testCaseParamenter, Map<String, Response> responsesRetrieved, TestCase tcObject, String environment) {
+        logger.debug(tcObject, "process");
 
         // here the code!
     }

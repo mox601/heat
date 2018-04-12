@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -50,14 +51,14 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testNoPlaceholderString() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         String processedStr = (String) underTest.placeholderProcessString("pippo");
         Assert.assertEquals(processedStr, "pippo");
     }
 
     @Test (enabled = true)
     public void testGetStepString() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         Map<Integer, Map<String, String>> flowVariables = new HashMap<>();
         Map<String, String> step1 = new HashMap<>();
         step1.put("outputParamName", "outputParamValue");
@@ -87,7 +88,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testGetPreloadSimpleString() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         Map<String, Object> preloadedVariables = new HashMap<>();
         preloadedVariables.put("preloadedVarName", "preloadedVarValue");
         underTest.setPreloadedVariables(preloadedVariables);
@@ -98,7 +99,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testGetPreloadComplexDefaultString() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         Map<String, Object> preloadedVariables = new HashMap<>();
         Map<String, String> complexStructure = new HashMap<>();
         complexStructure.put("DEFAULT", "default_value");
@@ -136,7 +137,7 @@ public class PlaceholderHandlerTest {
     @Test(enabled = true, expectedExceptions = { HeatException.class },
             expectedExceptionsMessageRegExp = ".* variable '.*' not correctly preloaded")
     public void testGetPreloadNotExistentString() throws Exception {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         Map<String, Object> preloadedVariables = new HashMap<>();
         preloadedVariables.put("preloadedVarName", "preloadedVarValue");
         underTest.setPreloadedVariables(preloadedVariables);
@@ -146,7 +147,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testGetNotExistentStepString() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         Map<Integer, Map<String, String>> flowVariables = new HashMap<>();
         Map<String, String> step1 = new HashMap<>();
         step1.put("outputParamName", "outputParamValue");
@@ -159,7 +160,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testGetNotExistentOutputString() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         Map<Integer, Map<String, String>> flowVariables = new HashMap<>();
         Map<String, String> step1 = new HashMap<>();
         step1.put("outputParamName", "outputParamValue");
@@ -172,7 +173,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testPathPlaceholderString() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         underTest.setResponse(buildResponse());
         String stringToProcess = "${path[field_path]}";
         String processedStr = (String) underTest.placeholderProcessString(stringToProcess);
@@ -189,7 +190,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testPathPlaceholderTotalRspString() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         underTest.setResponse(buildResponse());
         String stringToProcess = "${path[.]}";
         String processedStr = (String) underTest.placeholderProcessString(stringToProcess);
@@ -199,7 +200,7 @@ public class PlaceholderHandlerTest {
     @Test(enabled = true, expectedExceptions = { HeatException.class },
             expectedExceptionsMessageRegExp = ".* It is not possible to retrieve the jsonPath (.*) from the current response. --> response: .*")
     public void testPathPlaceholderNotExistentString() throws Exception {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         underTest.setResponse(buildResponse());
         String stringToProcess = "${path[pippo]}";
         underTest.placeholderProcessString(stringToProcess);
@@ -207,7 +208,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testProcessHeaderPlaceholder() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         underTest.setResponse(buildResponse());
 
         String stringToProcess = "PIPPO_${header[test_header]}";
@@ -234,7 +235,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testProcessCookiePlaceholder() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         underTest.setResponse(buildResponse());
 
         String stringToProcess = "PIPPO_${cookie[test_cookie]}";
@@ -285,7 +286,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testGeneralMapAsInput() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
 
         Map<String, Object> preloadedVariables = new HashMap<>();
         preloadedVariables.put("preloadedVarName", "preloadedVarValue");
@@ -309,7 +310,7 @@ public class PlaceholderHandlerTest {
 
     @Test (enabled = true)
     public void testProcessPlaceholders() {
-        underTest = new PlaceholderHandler();
+        underTest = new PlaceholderHandler(TestCase.getInstance());
         Map<String, Object> preloadedVariables = new HashMap<>();
         preloadedVariables.put("preloadedVarName1", "preloadedVarValue1");
         preloadedVariables.put("preloadedVarName2", "preloadedVarValue2");

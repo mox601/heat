@@ -24,14 +24,13 @@ import java.util.Set;
 
 import com.hotels.heat.core.testcasedetails.TestCase;
 import org.apache.http.HttpStatus;
-import org.testng.ITestContext;
 
 import com.hotels.heat.core.handlers.AssertionHandler;
 import com.hotels.heat.core.handlers.OperationHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.utils.TestCaseUtils;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 import com.jayway.restassured.module.jsv.JsonSchemaValidator;
 import com.jayway.restassured.response.Header;
@@ -393,7 +392,7 @@ public class BasicChecks {
             this.responses = responses;
         }
 
-        OperationHandler operationHandler = new OperationHandler(fieldToCheck, this.responses);
+        OperationHandler operationHandler = new OperationHandler(fieldToCheck, this.responses, this.testCaseObj);
         operationHandler.setOperationBlocking(isBlocking);
         operationHandler.setFlowOutputParameters(retrievedParameters);
         return operationHandler.execute();

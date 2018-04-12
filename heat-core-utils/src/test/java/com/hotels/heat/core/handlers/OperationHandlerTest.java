@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -50,7 +51,7 @@ public class OperationHandlerTest {
 
     @Test (enabled = true)
     public void testCompareEqualsFields() {
-        underTest = new OperationHandler(getEqualsFieldsToCheck(), buildResponses());
+        underTest = new OperationHandler(getEqualsFieldsToCheck(), buildResponses(), TestCase.getInstance());
 
         boolean execution = underTest.execute();
         Assert.assertTrue(execution);
@@ -60,7 +61,7 @@ public class OperationHandlerTest {
     @Test(enabled = true, expectedExceptions = HeatException.class)
     public void testCompareDifferentFields() {
         //In this case the execute method does not return a boolean with value false but trows an exception
-        underTest = new OperationHandler(getDifferentFieldsToCheck(), buildResponses());
+        underTest = new OperationHandler(getDifferentFieldsToCheck(), buildResponses(), TestCase.getInstance());
 
         underTest.execute();
 

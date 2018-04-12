@@ -19,11 +19,11 @@
     </scm>
 
     <modules>
+        <module>heat-commons</module>
         <module>heat-module-support</module>
         <module>heat-core-utils</module>
         <module>heat-internal-modules</module>
         <module>heat-bundle</module>
-        <module>heat-commons</module>
         <module>heat-test-module</module>
     </modules>
 

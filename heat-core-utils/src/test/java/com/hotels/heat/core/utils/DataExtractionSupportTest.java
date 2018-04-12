@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -30,7 +31,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.hotels.heat.core.specificexception.HeatException;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 /**
  * Unit Tests for {@link DataExtractionSupport}.
@@ -40,47 +41,45 @@ import com.hotels.heat.core.utils.log.Log;
 @PrepareForTest(DataExtractionSupport.class)
 public class DataExtractionSupportTest {
 
-    @Mock
-    private Log logUtils;
 
     @InjectMocks
     private DataExtractionSupport underTest;
 
     @BeforeMethod
     public void setUp() {
-        logUtils = new Log();
+
     }
 
     @Test
     public void testSimpleString() {
-        underTest = new DataExtractionSupport(logUtils);
+        underTest = new DataExtractionSupport(TestCase.getInstance());
         String processedStr = underTest.process(getSimpleStringObject(), null, null);
         Assert.assertEquals(processedStr, getSimpleStringObject());
     }
 
     @Test(expectedExceptions = { HeatException.class }, expectedExceptionsMessageRegExp = ".* actualValue/expectedValue belongs to class .* not supported")
     public void testNotSupportedObject() throws Exception {
-        underTest = new DataExtractionSupport(logUtils);
+        underTest = new DataExtractionSupport(TestCase.getInstance());
         underTest.process(getNotSupportedClassObject(), null, null);
     }
 
     @Test
     public void testRegularExtractionMapObject() {
-        underTest = new DataExtractionSupport(logUtils);
+        underTest = new DataExtractionSupport(TestCase.getInstance());
         String processedStr = underTest.process(getRegexpExtractionMapObject(), null, null);
         Assert.assertEquals(processedStr, "123");
     }
 
     @Test
     public void testOccurrenceExtractionMapObject() {
-        underTest = new DataExtractionSupport(logUtils);
+        underTest = new DataExtractionSupport(TestCase.getInstance());
         String processedStr = underTest.process(getOccurrenceOfMapObject(), null, null);
         Assert.assertEquals(processedStr, "2");
     }
 
     @Test(expectedExceptions = { HeatException.class }, expectedExceptionsMessageRegExp = ".* configuration .* not supported")
     public void testNotSupportedMapObject() throws Exception {
-        underTest = new DataExtractionSupport(logUtils);
+        underTest = new DataExtractionSupport(TestCase.getInstance());
         underTest.process(getNotSupportedMapObject(), null, null);
     }
 

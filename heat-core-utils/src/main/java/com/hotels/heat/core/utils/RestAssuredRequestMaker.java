@@ -23,16 +23,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ch.qos.logback.classic.Level;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.http.conn.ConnectTimeoutException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
-import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.specificexception.HeatException;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.filter.log.LogDetail;
@@ -49,20 +48,21 @@ import com.jayway.restassured.specification.RequestSpecification;
  */
 public class RestAssuredRequestMaker {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RestAssuredRequestMaker.class);
     private static final String LOG_LEVEL_PROPERTY      = "setLogLevel";
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
 
     private RequestSpecification requestSpecification;
     private String defUrl;
-    private final Log logUtils;
     private String webappPath;
+
+    private Log logger = new Log(RestAssuredRequestMaker.class);
+    private TestCase tcObject;
 
     /**
      * Constructor of the class RestAssuredRequestMaker. This is the class that really executes the request against the service under test.
      */
-    public RestAssuredRequestMaker() {
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
+    public RestAssuredRequestMaker(TestCase tcObject) {
+        this.tcObject = tcObject;
         this.defUrl = "";
         this.webappPath = "";
     }
@@ -95,13 +95,13 @@ public class RestAssuredRequestMaker {
 
         setRequestSpecification(cookiesParam, headersParam, url);
 
-        logUtils.trace("HTTP-METHOD >> {}", httpMethod.name());
+        logger.trace(this.tcObject, "HTTP-METHOD >> {}", httpMethod.name());
 
-        headersParam.forEach((k, v) -> logUtils.trace("HEADER-PARAM >> {}:{}", k, v));
+        headersParam.forEach((k, v) -> logger.trace(this.tcObject, "HEADER-PARAM >> {}:{}", k, v));
 
-        cookiesParam.forEach((k, v) -> logUtils.trace("COOKIE-PARAM >> {}:{}", k, v));
+        cookiesParam.forEach((k, v) -> logger.trace(this.tcObject, "COOKIE-PARAM >> {}:{}", k, v));
 
-        logUtils.trace("URL >> '{}'", url);
+        logger.trace(this.tcObject, "URL >> '{}'", url);
 
         TestRequest tcRequest = new TestRequest(url);
         tcRequest.setHeadersParams(headersParam);
@@ -120,8 +120,8 @@ public class RestAssuredRequestMaker {
      * @return the Response retrieved from the service under test
      */
     public Response executeTestRequest(TestRequest testRequest) {
-        HttpRequestFormatter reqFormatter = new HttpRequestFormatter(testRequest, logUtils);
-        logUtils.debug("CURL-HINT >> \n" + reqFormatter.toCURL());
+        HttpRequestFormatter reqFormatter = new HttpRequestFormatter(testRequest, this.tcObject);
+        logger.debug(this.tcObject, "CURL-HINT >> \n" + reqFormatter.toCURL());
 
         return executeHttpRequest(testRequest.getHttpMethod(), testRequest.getUrl(), testRequest.getQueryParams());
 
@@ -132,11 +132,11 @@ public class RestAssuredRequestMaker {
         try {
             postBody = HttpRequestFormatter.readPostBodyFromFile(postBody);
         } catch (FileNotFoundException fileException) {
-            throw new HeatException(this.logUtils.getTestCaseDetails() + "RestAssuredMessages::executeHttpRequest --> post body file '" + postBody + "' not found!");
+            throw new HeatException(this.getClass(), this.tcObject, "RestAssuredMessages::executeHttpRequest --> post body file '{}' not found!", postBody);
         } catch (IOException ioException) {
-            throw new HeatException(this.logUtils.getTestCaseDetails() + "RestAssuredMessages::executeHttpRequest --> IOException message: " + ioException.getLocalizedMessage());
+            throw new HeatException(this.getClass(), this.tcObject, "RestAssuredMessages::executeHttpRequest --> IOException message: {}", ioException.getLocalizedMessage());
         } catch (Exception ex) {
-            logUtils.error("({}) -- Exception in buildRequestByParams: {}", httpMethod.name(), ex.getLocalizedMessage());
+            logger.error(this.tcObject, "({}) -- Exception in buildRequestByParams: {}", httpMethod.name(), ex.getLocalizedMessage());
         }
         return postBody;
     }
@@ -170,7 +170,7 @@ public class RestAssuredRequestMaker {
             } else if (queryParams.containsKey(TestCaseUtils.JSON_FIELD_MULTIPART_BODY)) {
                 final Object parts = queryParams.get(TestCaseUtils.JSON_FIELD_MULTIPART_BODY);
                 if (!(parts instanceof List)) {
-                    throw new HeatException("'parts' definition should be an array");
+                    throw new HeatException(this.getClass(), this.tcObject, "'parts' definition should be an array");
                 }
 
                 final List<MultiPartSpecification> multipart = MultipartUtils.convertToMultipart((List<Map<String, String>>) parts);
@@ -181,7 +181,7 @@ public class RestAssuredRequestMaker {
                 addQueryParameters(queryParams);
             }
 
-            logUtils.debug("Detailed Request: \n{}", getRequestDetails(httpMethod, url));
+            logger.debug(this.tcObject, "Detailed Request: \n{}", getRequestDetails(httpMethod, url));
             switch (httpMethod) {
             case GET:
                 serviceResponse = requestSpecification.when().get(url);
@@ -196,17 +196,17 @@ public class RestAssuredRequestMaker {
                 serviceResponse = requestSpecification.when().post(url);
                 break;
             default:
-                logUtils.warning("HTTP METHOD '{}' not recognized. GET METHOD used as default", httpMethod.toString());
+                logger.warn(this.tcObject, "HTTP METHOD '{}' not recognized. GET METHOD used as default", httpMethod.toString());
                 serviceResponse = requestSpecification.when().get(url);
                 break;
             }
-            logUtils.debug("The response is: {}", serviceResponse.asString());
+            logger.debug(this.tcObject, "The response is: {}", serviceResponse.asString());
         } catch (Exception oEx) {
-            logUtils.error("exception --> {}", oEx.getLocalizedMessage());
+            logger.logException(this.getClass(), this.tcObject, oEx);
             if (oEx.getClass().equals(ConnectTimeoutException.class)) {
-                throw new HeatException(this.logUtils.getTestCaseDetails() + "RestAssuredMessages::executeHttpRequest --> Connect Timeout Exception");
+                throw new HeatException(this.getClass(), this.tcObject, oEx, "RestAssuredMessages::executeHttpRequest --> Connect Timeout Exception");
             }
-            logUtils.error("The response is null");
+            logger.error(this.tcObject, "The response is null");
         }
         return serviceResponse;
 
@@ -267,8 +267,8 @@ public class RestAssuredRequestMaker {
      */
     private RequestSpecification given() {
         RequestSpecification restSpec;
-        String logLevelProperty = System.getProperty(LOG_LEVEL_PROPERTY, Log.LOG_LEVEL_INFO).toUpperCase();
-        if (Log.LOG_LEVEL_DEBUG.equals(logLevelProperty)) {
+        String logLevelProperty = System.getProperty(LOG_LEVEL_PROPERTY, Level.INFO.toString()).toUpperCase();
+        if (Level.DEBUG.toString().equals(logLevelProperty)) {
             restSpec = RestAssured.given().baseUri(defUrl);
         } else {
             restSpec = RestAssured.given().log().ifValidationFails().baseUri(defUrl);
@@ -284,8 +284,8 @@ public class RestAssuredRequestMaker {
      */
     private RequestSpecification givenSsl() {
         RequestSpecification restSpec;
-        String logLevelProperty = System.getProperty(LOG_LEVEL_PROPERTY, Log.LOG_LEVEL_INFO).toUpperCase();
-        if (Log.LOG_LEVEL_DEBUG.equals(logLevelProperty)) {
+        String logLevelProperty = System.getProperty(LOG_LEVEL_PROPERTY, Level.INFO.toString()).toUpperCase();
+        if (Level.DEBUG.toString().equals(logLevelProperty)) {
             restSpec = RestAssured.given().urlEncodingEnabled(true).relaxedHTTPSValidation().baseUri(defUrl);
         } else {
             restSpec = RestAssured.given().urlEncodingEnabled(true).log().ifValidationFails().relaxedHTTPSValidation().baseUri(defUrl);
@@ -299,7 +299,7 @@ public class RestAssuredRequestMaker {
             requestDetails = Optional.fromNullable(RequestPrinter.print((FilterableRequestSpecification) requestSpecification, httpMethod.name(), url, LogDetail.ALL,
                     new PrintStream(os), true));
         } catch (IOException e) {
-            logUtils.error("Unable to log 'Request Details', error occured during retrieving the information");
+            logger.error(this.tcObject, "Unable to log 'Request Details', error occured during retrieving the information");
         }
         return requestDetails.or("");
     }

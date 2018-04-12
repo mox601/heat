@@ -18,7 +18,7 @@ package com.hotels.heat.core.validations;
 import com.hotels.heat.core.handlers.AssertionHandler;
 import com.hotels.heat.core.testcasedetails.TestCase;
 import com.hotels.heat.core.utils.InputConverter;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 /**
  * Cases of the arithmetic checks.

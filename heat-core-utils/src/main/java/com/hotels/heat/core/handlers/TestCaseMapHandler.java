@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import com.hotels.heat.core.testcasedetails.TestCase;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 
 /**

@@ -22,8 +22,8 @@ import java.util.List;
 
 import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.handlers.PropertyHandler;
-import com.hotels.heat.core.handlers.TestSuiteHandler;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.testcasedetails.TestCase;
+import com.hotels.heat.core.log.Log;
 
 
 /**
@@ -44,18 +44,20 @@ public final class EnvironmentHandler {
     private String environmentUnderTest;
     private String webappUnderTest;
 
-    private Log logUtils;
     private List<String> heatTestPropertyList;
     private PlaceholderHandler placeholderHandler;
+
+    private Log logger = new Log(EnvironmentHandler.class);
+    private TestCase tcObject;
 
 
     /**
      * Constructor with parameters.
      * @param inputPh Property Handler object
      */
-    public EnvironmentHandler(PropertyHandler inputPh) {
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
+    public EnvironmentHandler(PropertyHandler inputPh, TestCase tcObject) {
         this.ph = inputPh;
+        this.tcObject = tcObject;
         loadSysProperties();
         this.setEnabledEnvironments(defaultEnvironment);
     }
@@ -64,10 +66,9 @@ public final class EnvironmentHandler {
      * Constructor of the object with the loading of the property file.
      * @param propFilePath path of the prop file
      */
-    public EnvironmentHandler(String propFilePath) {
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
-        this.placeholderHandler = new PlaceholderHandler();
-        this.ph = new PropertyHandler(propFilePath, placeholderHandler);
+    public EnvironmentHandler(String propFilePath, TestCase tcObject) {
+        this.placeholderHandler = new PlaceholderHandler(this.tcObject);
+        this.ph = new PropertyHandler(propFilePath, placeholderHandler, this.tcObject);
         loadSysProperties();
     }
 
@@ -78,11 +79,11 @@ public final class EnvironmentHandler {
      * - webappName: the name of the service under test, useful when we have to load properties from environment.properties file.
      */
     private void loadSysProperties() {
-        logUtils.trace("defaultEnvironment '{}'", System.getProperty("defaultEnvironment"));
-        logUtils.trace("DEFAULT_ENVIRONMENT '{}'", DEFAULT_ENVIRONMENT);
+        logger.trace(this.tcObject, "defaultEnvironment '{}'", System.getProperty("defaultEnvironment"));
+        logger.trace(this.tcObject, "DEFAULT_ENVIRONMENT '{}'", DEFAULT_ENVIRONMENT);
         defaultEnvironment = System.getProperty("defaultEnvironment", DEFAULT_ENVIRONMENT);
         environmentUnderTest = System.getProperty("environment", defaultEnvironment);
-        logUtils.trace("Environment under test '{}'", environmentUnderTest);
+        logger.trace(this.tcObject, "Environment under test '{}'", environmentUnderTest);
         webappUnderTest = System.getProperty("webappName", DEFAULT_SERVICE);
         heatTestPropertyList = testIds2List(System.getProperty(SYS_PROP_HEAT_TEST));
     }
@@ -103,28 +104,28 @@ public final class EnvironmentHandler {
     public String getEnvironmentUrl(String webApp) {
         String url;
         ph.loadEnvironmentProperties();
-        logUtils.trace("The environment I am going to test is '{}'", environmentUnderTest);
-        logUtils.trace("Enabled environments are '{}'", enabledEnvironments);
+        logger.trace(this.tcObject, "The environment I am going to test is '{}'", environmentUnderTest);
+        logger.trace(this.tcObject, "Enabled environments are '{}'", enabledEnvironments);
 
         if (!environmentUnderTest.startsWith(HTTP)) { //no custom environment
             if (enabledEnvironments.contains(environmentUnderTest)) {
-                logUtils.trace("The environment is among the enabled ones.");
+                logger.trace(this.tcObject, "The environment is among the enabled ones.");
                 url = ph.getProperty(webApp + "." + environmentUnderTest + ".path");
 
             } else {
                 url = null;
-                logUtils.debug("The environment '{}' is not enabled for this test. The enabled environments are '{}'",
+                logger.debug(this.tcObject, "The environment '{}' is not enabled for this test. The enabled environments are '{}'",
                         environmentUnderTest, enabledEnvironments);
             }
         } else {
-            logUtils.trace("The environment is not a standard one");
+            logger.trace(this.tcObject, "The environment is not a standard one");
             if (!webApp.equalsIgnoreCase(webappUnderTest)) {
                 url = ph.getProperty(webApp + "." + defaultEnvironment + ".path");
             } else {
                 url = environmentUnderTest;
             }
         }
-        logUtils.trace("Url returned for '{}' is '{}'", webApp, url);
+        logger.trace(this.tcObject, "Url returned for '{}' is '{}'", webApp, url);
         return url;
     }
 

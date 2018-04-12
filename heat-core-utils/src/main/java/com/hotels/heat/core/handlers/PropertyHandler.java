@@ -20,7 +20,8 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.testcasedetails.TestCase;
+import com.hotels.heat.core.log.Log;
 
 /**
  * Manages the framework system configuration from properties file.
@@ -28,21 +29,23 @@ import com.hotels.heat.core.utils.log.Log;
 public class PropertyHandler {
     private Properties properties;
     private final String propFile;
-    private final Log logUtils;
     private boolean isLoaded;
     private PlaceholderHandler placeholderHandler;
+
+    private Log logger = new Log(PropertyHandler.class);
+    private TestCase tcObject;
 
     /**
      * Constructor of the class PropertyHandler.
      * @param propertyFile is the path of the file to load
      * @param placeholderHandler placeholder handler
      */
-    public PropertyHandler(String propertyFile, PlaceholderHandler placeholderHandler) {
+    public PropertyHandler(String propertyFile, PlaceholderHandler placeholderHandler, TestCase tcObject) {
         this.isLoaded = false;
         this.properties = new Properties();
         this.propFile = propertyFile;
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
         this.placeholderHandler = placeholderHandler;
+        this.tcObject = tcObject;
     }
 
     /**
@@ -53,19 +56,19 @@ public class PropertyHandler {
         if (!isLoaded) {
             InputStream inputStream = null;
             try {
-                logUtils.trace("loading '{}' file", propFile);
+                logger.trace(this.tcObject, "loading '{}' file", propFile);
                 inputStream = new FileInputStream(propFile);
                 properties.load(inputStream);
                 isLoaded = true;
 
             } catch (Exception oEx) {
-                logUtils.error("Error! '{}'", oEx.getLocalizedMessage());
+                logger.error(this.tcObject, "Error! '{}'", oEx.getLocalizedMessage());
                 isLoaded = false;
             } finally {
                 try {
                     inputStream.close();
                 } catch (Exception oEx) {
-                    logUtils.error("Error! '{}'", oEx.getLocalizedMessage());
+                    logger.error(this.tcObject, "Error! '{}'", oEx.getLocalizedMessage());
                     isLoaded = false;
                 }
             }
@@ -85,7 +88,7 @@ public class PropertyHandler {
                 retrievedProp = ((Map<String, String>) placeholderHandler.placeholderProcessString(retrievedProp)).get("DEFAULT");
             }
         } else {
-            logUtils.debug("The file containing the environment properties seems to be empty!");
+            logger.debug(this.tcObject, "The file containing the environment properties seems to be empty!");
         }
         return retrievedProp;
     }

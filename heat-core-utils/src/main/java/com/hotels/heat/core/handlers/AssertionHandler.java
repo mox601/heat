@@ -23,7 +23,7 @@ import org.testng.asserts.Assertion;
 
 import com.hotels.heat.core.specificexception.HeatException;
 import com.hotels.heat.core.utils.CustomSoftAssert;
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 
 /**

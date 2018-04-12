@@ -18,8 +18,9 @@ package com.hotels.heat.module.dateretrieving;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hotels.heat.core.handlers.TestCase;
 import com.hotels.heat.core.heatmodules.HeatPlaceholderModule;
+import com.hotels.heat.core.log.Log;
+import com.hotels.heat.core.testcasedetails.TestCase;
 
 /**
  * Module to handle dates.
@@ -31,6 +32,9 @@ public final class DateHeatPlaceholderModule implements HeatPlaceholderModule {
     public static final String TODAY_PLACEHOLDER = "${" + TODAY_PLACEHOLDER_KEYWORD; //${TODAY
     public static final String TODAY_PLACEHOLDER_DEFAULT_PATTERN = "YYYY-MM-dd";
     private static DateHeatPlaceholderModule dateHeatPlaceholderModuleInstance;
+
+    private Log logger = new Log(DateHeatPlaceholderModule.class);
+    private TestCase tcObject;
 
     private DateHeatPlaceholderModule() {
     }
@@ -44,10 +48,11 @@ public final class DateHeatPlaceholderModule implements HeatPlaceholderModule {
 
     @Override
     public Map<String, String> process(String stringToProcess, TestCase tcObject) {
+        this.tcObject = tcObject;
         Map<String, String> processedMap = new HashMap<>();
         processedMap.put(DateHeatPlaceholderModule.DEFAULT_PRELOADED_VALUE, stringToProcess);
 
-        DateHandler dateHandler = new DateHandler(tcObject.getTestCaseDescription());
+        DateHandler dateHandler = new DateHandler(this.tcObject);
         if (stringToProcess.contains(DateHeatPlaceholderModule.TODAY_PLACEHOLDER)) {
             processedMap.put(DateHeatPlaceholderModule.DEFAULT_PRELOADED_VALUE, dateHandler.changeDatesPlaceholders(true, stringToProcess));
         }

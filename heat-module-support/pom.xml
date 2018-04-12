@@ -8,4 +8,12 @@
     </parent>
     <artifactId>heat-module-support</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.hotels</groupId>
+            <artifactId>heat-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
 </project>

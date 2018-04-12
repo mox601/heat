@@ -17,6 +17,7 @@ package com.hotels.heat.core.handlers;
 
 import java.util.Properties;
 
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,7 +27,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.hotels.heat.core.utils.log.Log;
+import com.hotels.heat.core.log.Log;
 
 
 /**
@@ -37,8 +38,6 @@ import com.hotels.heat.core.utils.log.Log;
 @PrepareForTest(PropertyHandler.class)
 public class PropertyHandlerTest {
 
-    @Mock
-    private Log logUtils;
 
     @Mock
     private PlaceholderHandler placeholderHandler;
@@ -47,9 +46,7 @@ public class PropertyHandlerTest {
     private PropertyHandler underTest;
 
     @BeforeMethod
-    public void setUp() {
-        logUtils = new Log();
-    }
+    public void setUp() { }
 
     private void clearSysProperties() {
         System.clearProperty("defaultEnvironment");
@@ -65,7 +62,7 @@ public class PropertyHandlerTest {
         System.setProperty("webappName", "WEBAPP_UNDER_TEST");
 
 
-        underTest = new PropertyHandler("file", placeholderHandler);
+        underTest = new PropertyHandler("file", placeholderHandler, TestCase.getInstance());
         underTest.loadEnvironmentProperties();
         Assert.assertFalse(underTest.isLoaded());
 
@@ -74,7 +71,7 @@ public class PropertyHandlerTest {
     @Test
     public void testPropertiesSetterAndGetter() {
 
-        underTest = new PropertyHandler("file", placeholderHandler);
+        underTest = new PropertyHandler("file", placeholderHandler, TestCase.getInstance());
         Properties ps = new Properties();
         underTest.setProperties(ps);
         Assert.assertEquals(ps, underTest.getProperties());
