@@ -234,7 +234,7 @@ public class TestBaseRunner implements RunnerInterface {
     @Override
     public void specificChecks(TestCase tcObject, Map testCaseParams, Map<String, Response> rspRetrieved, String environment) {
         ServiceLoader.load(SpecificChecks.class).forEach((checks) -> {
-            checks.process(testCaseParams, rspRetrieved, this.tcObject,
+            checks.process(this.tcObject.getTestSuiteName(), testCaseParams, rspRetrieved, this.tcObject,
                     TestSuiteHandler.getInstance().getEnvironmentHandler().getEnvironmentUnderTest());
         });
     }

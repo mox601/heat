@@ -26,14 +26,15 @@ import com.jayway.restassured.response.Response;
  */
 public abstract class SpecificChecks {
 
-    public void process(Map testCaseParamenter, Map<String, Response> responsesRetrieved, TestCase testCaseDetails, String environment) {
-        if (this.handledSuites().contains(testCaseDetails.getTestSuiteName())) {
-            this.process(testCaseParamenter, responsesRetrieved, testCaseDetails, environment);
+    public void process(String suiteName, Map testCaseParamenter, Map<String, Response> responsesRetrieved, TestCase tcObject, String environment) {
+        if (this.handledSuites().contains(suiteName)) {
+            this.process(testCaseParamenter, responsesRetrieved, tcObject, environment);
         }
     }
 
-    protected abstract void process(Map testCaseParameter, Map<String, Response> responsesRetrieved, TestCase testCaseDetails, String environment);
+    protected abstract void process(Map testCaseParamenter, Map<String, Response> responsesRetrieved, TestCase tcObject, String environment);
 
     protected abstract Set<String> handledSuites();
+
 
 }
