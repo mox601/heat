@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  */
 package com.hotels.heat.core.heatmodules;
 
-import java.util.Map;
+import com.hotels.heat.core.testcasedetails.TestCase;
 
-import com.hotels.heat.core.dto.HeatTestDetails;
+import java.util.Map;
 
 public interface HeatPlaceholderModule extends HeatModule {
 
-    public Map<String, String> process(String stringToProcess, HeatTestDetails testDetails);
+    public Map<String, String> process(String stringToProcess, TestCase testDetails);
 
 }

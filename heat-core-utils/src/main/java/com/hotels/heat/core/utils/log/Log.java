@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package com.hotels.heat.core.utils.log;
 
-import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
@@ -27,12 +27,6 @@ import ch.qos.logback.classic.Level;
 public class Log {
 
     //TODO substitute these strings with the proper logback enum
-    public static final String LOG_LEVEL_INFO = "info";
-    public static final String LOG_LEVEL_ERROR = "error";
-    public static final String LOG_LEVEL_WARN = "warn";
-    public static final String LOG_LEVEL_ALL = "all";
-    public static final String LOG_LEVEL_TRACE_LOG = "trace";
-    public static final String LOG_LEVEL_DEBUG = "debug";
     private Class InputClass;
 
     private String logLevel;
@@ -47,33 +41,17 @@ public class Log {
      * This method sets the log level (logback).
      */
     public void setLogLevel() {
-        logLevel = System.getProperty("logLevel", LOG_LEVEL_INFO);
+        logLevel = System.getProperty("logLevel", Level.INFO.toString());
         ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
         Level logLevelSetting;
-        switch (logLevel.toLowerCase()) {
-        case LOG_LEVEL_ERROR:
-            logLevelSetting = Level.ERROR;
-            break;
-        case LOG_LEVEL_WARN:
-            logLevelSetting = Level.WARN;
-            break;
-        case LOG_LEVEL_ALL:
-            logLevelSetting = Level.ALL;
-            break;
-        case LOG_LEVEL_TRACE_LOG:
-            logLevelSetting = Level.TRACE;
-            break;
-        case LOG_LEVEL_INFO:
+
+        try {
+            logLevelSetting = Level.valueOf(logLevel.toUpperCase());
+        } catch (Exception oEx) {
             logLevelSetting = Level.INFO;
-            break;
-        case LOG_LEVEL_DEBUG:
-            logLevelSetting = Level.DEBUG;
-            break;
-        default:
-            logLevelSetting = Level.INFO;
-            break;
         }
         root.setLevel(logLevelSetting);
+
     }
 
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.hotels.heat.core.validations;
 
 import com.hotels.heat.core.handlers.AssertionHandler;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import com.hotels.heat.core.utils.InputConverter;
 import com.hotels.heat.core.utils.log.Log;
 
@@ -36,18 +37,20 @@ public class ArithmeticalValidator {
 
     private final InputConverter converter;
     private final AssertionHandler assertionHandler;
-    private final Log logUtils;
+
+    private Log logger = new Log(ArithmeticalValidator.class);
+    private TestCase tcObject;
 
     /**
      * Constructor of Arithmetical Validator.
      * This class is useful in case of validation of any kind of numbers, since it supports several types (boolean, int, double), and it supports operations such as
      * =, !=, &gt;, &gt;=, &lt;, &lt;+
-     * @param logUtils the object that contains test case information useful for logging
+     * @param tcObject the object that contains test case information useful for logging
      */
-    public ArithmeticalValidator(Log logUtils) {
-        this.logUtils = logUtils;
-        this.converter = new InputConverter(logUtils);
-        this.assertionHandler = new AssertionHandler();
+    public ArithmeticalValidator(TestCase tcObject) {
+        this.tcObject = tcObject;
+        this.converter = new InputConverter(this.tcObject);
+        this.assertionHandler = new AssertionHandler(this.tcObject);
     }
     /**
      * Mathematical checks.
@@ -66,7 +69,7 @@ public class ArithmeticalValidator {
             String validationMessage,
             String formatOfTypeCheckInput) {
         boolean isCheckOk = true;
-        logUtils.trace("Requested operation '{}'", operation);
+        logger.trace(this.tcObject, "Requested operation '{}'", operation);
         switch (operation) {
         case MATH_OPERATOR_GREATER_THAN:
             isCheckOk = assertionHandler.assertion(isBlocking, "assertTrue", validationMessage,
@@ -92,17 +95,17 @@ public class ArithmeticalValidator {
                     converter.convertToInt(stringToCheck), converter.convertToInt(stringExpected));
             break;
         default:
-            logUtils.trace("None of the operations matched, proceed with other validator classes.");
+            logger.trace(this.tcObject, "None of the operations matched, proceed with other validator classes.");
             break;
         }
-        logUtils.trace("check execution: {}", isCheckOk ? "OK" : "NOT OK");
+        logger.trace(this.tcObject, "check execution: {}", isCheckOk ? "OK" : "NOT OK");
         return isCheckOk;
     }
 
     private boolean mathEqualCheck(boolean isBlocking, String stringToCheck, String stringExpected, String validationMessage, String formatOfTypeCheckInput) {
         boolean isCheckOk;
         String formatOfTypeCheck = formatOfTypeCheckInput != null ? formatOfTypeCheckInput : "int";
-        logUtils.trace("Check type is '{}'", formatOfTypeCheck);
+        logger.trace(this.tcObject, "Check type is '{}'", formatOfTypeCheck);
         switch (formatOfTypeCheck) {
         case DOUBLE_FORMAT_NUMBER:
             isCheckOk = assertionHandler.assertion(isBlocking, "assertEquals", validationMessage,

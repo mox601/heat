@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
-import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.testng.ITestContext;
 
 import com.hotels.heat.core.environment.EnvironmentHandler;

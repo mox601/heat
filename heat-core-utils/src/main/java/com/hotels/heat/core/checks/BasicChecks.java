@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.apache.http.HttpStatus;
 import org.testng.ITestContext;
 
@@ -60,18 +60,18 @@ public class BasicChecks {
     private AssertionHandler assertionHandler;
 
     private TestCase testCaseObj = null;
-    private Log logUtils = new Log();
+    private Log logger = new Log(BasicChecks.class);
 
     private Map<Integer, Map<String, String>> retrievedParameters = new HashMap<>();
 
     /**
      * This is the constructor of the class BasicChecks.
-     * @param testContext context of the test case. It contains infos for
+     * @param testCaseObj context of the test case. It contains infos for
      * logging
      */
     public BasicChecks(TestCase testCaseObj) {
-        this.assertionHandler = new AssertionHandler();
         this.testCaseObj = testCaseObj;
+        this.assertionHandler = new AssertionHandler(this.testCaseObj);
     }
 
     /**
@@ -92,13 +92,13 @@ public class BasicChecks {
             isTestOk &= headerChecks(testCaseParams);
             isTestOk &= cookieChecks(testCaseParams);
         } catch (Exception oEx) {
-            logUtils.logException(oEx);
-            throw new HeatException(this.testCaseObj);
+            logger.logException(this.getClass(), this.testCaseObj, oEx);
+            throw new HeatException(this.getClass(), this.testCaseObj, oEx);
         }
 
         if (!isTestOk) {
-            logUtils.error("Common validation FAILED");
-            throw new HeatException(logUtils.getExceptionDetails() + "Common validation FAILED");
+            logger.error(this.testCaseObj, "Common validation FAILED");
+            throw new HeatException(this.getClass(), this.testCaseObj, "Common validation FAILED");
         }
     }
 
@@ -113,18 +113,18 @@ public class BasicChecks {
         //isBlocking: if it is true, in case of failure the test stops running, otherwise it will go on running with the other checks (the final result does not change)
         boolean isBlocking = TestSuiteHandler.getInstance().getTestCaseUtils().getSystemParamOnBlocking();
         if (responses == null) {
-            logUtils.error("response NULL");
-            throw new HeatException(logUtils.getExceptionDetails() + "response NULL");
+            logger.error(this.testCaseObj, "response NULL");
+            throw new HeatException(this.getClass(), this.testCaseObj, "response NULL");
         }
         if (testCaseParams.containsKey(EXPECTS_JSON_ELEMENT)) {
             Map<String, String> expectedParams = (Map<String, String>) testCaseParams.get(EXPECTS_JSON_ELEMENT);
             // The attribute "responseCode" in the json file is optional. If it is missing, the default value is 200
             int expectedRespCode = expectedParams.get(RESPONSE_CODE_JSON_ELEMENT) != null ? Integer.parseInt(expectedParams.get(RESPONSE_CODE_JSON_ELEMENT)) : HttpStatus.SC_OK;
             int currentStatusCode = ((Response) responses).getStatusCode();
-            logUtils.debug("check response code: current '{}' / expected '{}'", currentStatusCode, expectedRespCode);
-            isCheckOk &= assertionHandler.assertion(isBlocking, "assertEquals", logUtils.getTestCaseDetails() + "{checkResponseCode} ", currentStatusCode, expectedRespCode);
+            logger.debug(this.testCaseObj, "check response code: current '{}' / expected '{}'", currentStatusCode, expectedRespCode);
+            isCheckOk &= assertionHandler.assertion(isBlocking, "assertEquals", "{checkResponseCode} ", currentStatusCode, expectedRespCode);
         } else {
-            throw new HeatException(logUtils.getExceptionDetails() + "not any 'expects' found");
+            throw new HeatException(this.getClass(), this.testCaseObj, "not any 'expects' found");
         }
         return isCheckOk;
     }
@@ -146,16 +146,16 @@ public class BasicChecks {
         Map<String, String> expectedParams = (Map<String, String>) testCaseParams.get(EXPECTS_JSON_ELEMENT);
         String jsonSchemaPathToCheck = tcUtils.getRspJsonSchemaPath(expectedParams.get(JSON_SCHEMA_TO_CHECK_JSON_ELEMENT));
         if (expectedParams.containsKey(JSON_SCHEMA_TO_CHECK_JSON_ELEMENT) && jsonSchemaPathToCheck != null) {
-            logUtils.debug("starting json schema validation");
+            logger.debug(this.testCaseObj, "starting json schema validation");
             try {
                 getClass().getResourceAsStream("/" + jsonSchemaPathToCheck).available();
                 isCheckOk &= validateSchema(isBlocking, (Response) responses, jsonSchemaPathToCheck);
             } catch (Exception oEx) {
                 assertionHandler.assertion(isBlocking, "fail",
-                        logUtils.getTestCaseDetails() + "BasicChecks - jsonSchemaValidation -- the file '/" + jsonSchemaPathToCheck + "' does not exist");
+                        "BasicChecks - jsonSchemaValidation -- the file '/" + jsonSchemaPathToCheck + "' does not exist");
             }
         } else {
-            logUtils.debug("json schema validation disabled");
+            logger.debug(this.testCaseObj, "json schema validation disabled");
         }
         return isCheckOk;
     }
@@ -175,12 +175,12 @@ public class BasicChecks {
         try {
             JsonSchemaValidator validator = JsonSchemaValidator.matchesJsonSchemaInClasspath(jsonSchemaPath);
             resp.then().assertThat().body(validator);
-            logUtils.debug("json schema validation OK");
+            logger.debug(this.testCaseObj, "json schema validation OK");
         } catch (Exception oEx) {
             isCheckOk = false;
-            logUtils.error("json schema validation NOT OK");
-            assertionHandler.assertion(isBlocking, "fail", logUtils.getTestCaseDetails()
-                    + "BasicChecks - validateSchema >> validation schema failed. -- exception: "
+            logger.error(this.testCaseObj, "json schema validation NOT OK");
+            assertionHandler.assertion(isBlocking, "fail",
+                    "BasicChecks - validateSchema >> validation schema failed. -- exception: "
                     + oEx.getLocalizedMessage());
         }
         return isCheckOk;
@@ -208,20 +208,20 @@ public class BasicChecks {
                     String headerExpectedValue = (String) headerEntry.getValue();
                     String currentHeader = ((Response) responses).getHeader(headerName);
 
-                    logUtils.debug("header check: currentHeader = '{}'/ headerExpectedValue = '{}'",
+                    logger.debug(this.testCaseObj, "header check: currentHeader = '{}'/ headerExpectedValue = '{}'",
                         currentHeader, headerExpectedValue);
-                    isCheckOk &= assertionHandler.assertion(isBlocking, "assertEquals", logUtils.getTestCaseDetails() + "check on header '" + headerName + "'-- ",
+                    isCheckOk &= assertionHandler.assertion(isBlocking, "assertEquals", "check on header '" + headerName + "'-- ",
                             currentHeader, headerExpectedValue);
                 } else {
                     ArrayList<String> headerExpectedValues = (ArrayList<String>) headerEntry.getValue();
-                    logUtils.debug("header name '{}'", headerName);
+                    logger.debug(this.testCaseObj, "header name '{}'", headerName);
 
                     List<Header> headers = ((Response) responses).getHeaders().getList(headerName);
-                    isCheckOk &= assertionHandler.assertion(isBlocking, "assertEquals", logUtils.getTestCaseDetails() + "check on header '" + headerName + "'-- ",
+                    isCheckOk &= assertionHandler.assertion(isBlocking, "assertEquals", "check on header '" + headerName + "'-- ",
                             headerExpectedValues.size(), headers.size());
 
                     for (String expectedHeader : headerExpectedValues) {
-                        isCheckOk &= assertionHandler.assertion(isBlocking, "assertTrue", logUtils.getTestCaseDetails() + "check on header '" + headerName
+                        isCheckOk &= assertionHandler.assertion(isBlocking, "assertTrue", "check on header '" + headerName
                                         + "' The expected value is '" + expectedHeader + "' - The returned values are " + headers + "-- ",
                                 headers.stream().anyMatch(header -> header.getValue().equals(expectedHeader))
                             );
@@ -252,9 +252,9 @@ public class BasicChecks {
             for (Map.Entry<String, String> cookieEntry: cookieEntries) {
                 String cookieName = cookieEntry.getKey();
                 String cookieExpectedValue = cookieEntry.getValue();
-                logUtils.debug("cookie name '{}'", cookieName);
+                logger.debug(this.testCaseObj, "cookie name '{}'", cookieName);
                 String currentCookie = ((Response) responses).getCookie(cookieName);
-                isCheckOk &= assertionHandler.assertion(isBlocking, "assertEquals", logUtils.getTestCaseDetails() + "check on cookie '" + cookieName + "'-- ",
+                isCheckOk &= assertionHandler.assertion(isBlocking, "assertEquals", "check on cookie '" + cookieName + "'-- ",
                         currentCookie, cookieExpectedValue);
             }
         }
@@ -282,15 +282,15 @@ public class BasicChecks {
                     checkBlockdescription = (String) fieldCheck.get(DESCRIPTION_JSON_ELEMENT);
                 }
                 boolean isConditionVerified = true;
-                logUtils.trace("SINGLE CHECK BLOCK {}", fieldCheck.toString());
+                logger.trace(this.testCaseObj, "SINGLE CHECK BLOCK {}", fieldCheck.toString());
                 if (fieldCheck.containsKey(CONDITION_JSON_ELEMENT)) {
-                    logUtils.debug("{} --> There are some conditions for this check!", checkBlockdescription);
+                    logger.debug(this.testCaseObj, "{} --> There are some conditions for this check!", checkBlockdescription);
                     isConditionVerified = conditionVerification((ArrayList<Object>) fieldCheck.get(CONDITION_JSON_ELEMENT), checkBlockdescription);
                 }
                 if (isConditionVerified) {
                     isCheckOk &= singleBlockCheck(isBlocking, fieldCheck);
                 } else {
-                    logUtils.debug("condition not verified for: '{}'", getCheckDescription(fieldCheck));
+                    logger.debug(this.testCaseObj, "condition not verified for: '{}'", getCheckDescription(fieldCheck));
                 }
             }
         }
@@ -310,9 +310,7 @@ public class BasicChecks {
         try {
             description = (String) fieldCheck.get(DESCRIPTION_JSON_ELEMENT);
         } catch (Exception oEx) {
-            logUtils.error("Exception: class {}, cause {}, message {}",
-                    oEx.getClass(), oEx.getCause(), oEx.getLocalizedMessage());
-            throw new HeatException(logUtils.getExceptionDetails() + "It is not possible to retrieve the description of the check");
+            throw new HeatException(this.getClass(), this.testCaseObj, "It is not possible to retrieve the description of the check");
         }
         return description;
     }
@@ -328,15 +326,15 @@ public class BasicChecks {
      */
     private boolean conditionVerification(ArrayList<Object> conditionArray, String checkBlockDescription) {
         boolean isConditionVerified = true;
-        logUtils.debug("For the check '{}', there are {} conditions to verify",
+        logger.debug(this.testCaseObj, "For the check '{}', there are {} conditions to verify",
                 checkBlockDescription, conditionArray.size());
-        logUtils.trace("{}", conditionArray.toString());
+        logger.trace(this.testCaseObj, "{}", conditionArray.toString());
         Iterator itr = conditionArray.iterator();
         while (itr.hasNext()) {
-            logUtils.debug("### Condition: ");
+            logger.debug(this.testCaseObj, "### Condition: ");
             isConditionVerified = isConditionVerified && singleBlockCheck(false, (Map<String, Object>) itr.next());
         }
-        logUtils.debug("Conditions verified '{}'", isConditionVerified);
+        logger.debug(this.testCaseObj, "Conditions verified '{}'", isConditionVerified);
         return isConditionVerified;
     }
 
@@ -356,19 +354,17 @@ public class BasicChecks {
     private boolean singleBlockCheck(boolean isBlocking, Map<String, Object> fieldCheck) {
         boolean checkResult = true;
         try {
-            logUtils.trace("SINGLE BLOCK CHECK {}", fieldCheck.toString());
+            logger.trace(this.testCaseObj, "SINGLE BLOCK CHECK {}", fieldCheck.toString());
             if (fieldCheck.containsKey(ACTUAL_VALUE_JSON_ELEMENT) && fieldCheck.containsKey(EXPECTED_VALUE_JSON_ELEMENT)) {
                 checkResult = executeCheck(isBlocking, fieldCheck, responses);
             } else {
-                logUtils.error("modality not still supported: {}", fieldCheck.toString());
-                throw new HeatException(logUtils.getExceptionDetails()
-                        + "Not supported modality for the check '" + getCheckDescription(fieldCheck) + "'");
+                throw new HeatException(this.getClass(), this.testCaseObj, "Not supported modality for the check '{}'", getCheckDescription(fieldCheck));
             }
         } catch (Exception oEx) {
-            logUtils.error("Exception: class {}, cause {}, message {}",
+            logger.error(this.testCaseObj, "Exception: class {}, cause {}, message {}",
                     oEx.getClass(), oEx.getCause(), oEx.getLocalizedMessage());
-            throw new HeatException(logUtils.getExceptionDetails()
-                    + "It is not possible to execute the check '" + getCheckDescription(fieldCheck) + "'");
+            throw new HeatException(this.getClass(), this.testCaseObj, oEx,
+                    "It is not possible to execute the check '{}'", getCheckDescription(fieldCheck));
         }
         return checkResult;
     }
@@ -390,10 +386,10 @@ public class BasicChecks {
      */
     public boolean executeCheck(boolean isBlocking, Map fieldToCheck, Object responses) {
         if (responses.getClass().equals(Response.class)) {
-            logUtils.trace("BasicChecks - executeCheck --> 'responses' is a single response");
+            logger.trace(this.testCaseObj, "BasicChecks - executeCheck --> 'responses' is a single response");
             this.responses = (Response) responses;
         } else {
-            logUtils.trace("BasicChecks - executeCheck -- 'responses' is a map. Called by BasicMultipleChecks");
+            logger.trace(this.testCaseObj, "BasicChecks - executeCheck -- 'responses' is a map. Called by BasicMultipleChecks");
             this.responses = responses;
         }
 
@@ -403,9 +399,6 @@ public class BasicChecks {
         return operationHandler.execute();
     }
 
-    public ITestContext getContext() {
-        return this.testContext;
-    }
 
     public void setResponse(Response apiResponse) {
         responses = apiResponse;

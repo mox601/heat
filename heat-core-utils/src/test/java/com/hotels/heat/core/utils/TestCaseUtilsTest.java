@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.hotels.heat.core.utils;
 
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -33,7 +34,8 @@ public class TestCaseUtilsTest {
 
     @BeforeMethod
     public void setUp() {
-        this.underTest = new TestCaseUtils();
+        TestCase tcObject = TestCase.getInstance("test suite", "001");
+        this.underTest = new TestCaseUtils(tcObject);
 
         System.setProperty("environment", "env1");
         EnvironmentHandler eh = new EnvironmentHandler("envPropFilePath");

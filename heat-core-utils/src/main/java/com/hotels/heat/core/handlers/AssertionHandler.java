@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.hotels.heat.core.handlers;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.testng.asserts.Assertion;
 
 import com.hotels.heat.core.specificexception.HeatException;
@@ -30,10 +31,11 @@ import com.hotels.heat.core.utils.log.Log;
  */
 public class AssertionHandler {
 
-    private final Log logUtils;
+    private TestCase tcObject;
+    private Log logger = new Log(AssertionHandler.class);
 
-    public AssertionHandler() {
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
+    public AssertionHandler(TestCase tcObject) {
+        this.tcObject = tcObject;
     }
 
 
@@ -47,6 +49,7 @@ public class AssertionHandler {
      */
     public boolean assertion(boolean isBlocking, String assertType, String message, Object... currentObjs) {
         boolean checkOk = true;
+        message = "[" + this.tcObject.getTestCaseName() + "]" + message;
         try {
             if (isBlocking) {
                 Assertion hardAssertion = new Assertion();
@@ -58,18 +61,21 @@ public class AssertionHandler {
                     checkOk = false;
                 }
             }
-        } catch (NoSuchMethodException | IllegalAccessException oEx) {
-            throw new HeatException(logUtils.getExceptionDetails() + "exception '" + oEx.getClass() + "' with message '" + oEx.getLocalizedMessage() + "'");
-        } catch (InvocationTargetException oEx) {
-            //this is the exception raised in case of failure of the reflection-called method
-            throw new HeatException(oEx.getCause().toString().split(":")[1].trim());
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException oEx) {
+            throw new HeatException(this.getClass(), this.tcObject, oEx);
         }
+        /*catch (InvocationTargetException oEx) {
+            //this is the exception raised in case of failure of the reflection-called method
+            String exceptionString =
+            throw new HeatException(oEx.getCause().toString().split(":")[1].trim());
+        }*/
         return checkOk;
     }
 
     private void executeAssertion(String assertType, String message, Assertion hardAssertion, Object[] currentObjs)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Method assertionMethod;
+        message = "[" + this.tcObject.getTestCaseName() + "]" + message;
         if (currentObjs == null || currentObjs.length == 0) {
             Class[] cArg = new Class[1];
             cArg[0] = String.class;
@@ -89,7 +95,7 @@ public class AssertionHandler {
             assertionMethod = (hardAssertion.getClass()).getMethod(assertType, cArg);
             assertionMethod.invoke(hardAssertion, currentObjs[0], currentObjs[1], message);
         } else {
-            logUtils.trace("number of input objects not supported!");
+            logger.trace(this.tcObject, "number of input objects not supported!");
         }
     }
 

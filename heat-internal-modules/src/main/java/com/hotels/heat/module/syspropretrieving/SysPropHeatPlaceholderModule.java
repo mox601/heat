@@ -18,7 +18,7 @@ package com.hotels.heat.module.syspropretrieving;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hotels.heat.core.dto.HeatTestDetails;
+import com.hotels.heat.core.handlers.TestCase;
 import com.hotels.heat.core.heatmodules.HeatPlaceholderModule;
 
 /**
@@ -43,11 +43,11 @@ public final class SysPropHeatPlaceholderModule implements HeatPlaceholderModule
     }
 
     @Override
-    public Map<String, String> process(String stringToProcess, HeatTestDetails testDetails) {
+    public Map<String, String> process(String stringToProcess, TestCase tcObject) {
         Map<String, String> processedMap = new HashMap<>();
         processedMap.put(SysPropHeatPlaceholderModule.DEFAULT_PRELOADED_VALUE, stringToProcess);
 
-        SysPropHandler sysPropHandler = new SysPropHandler(testDetails.getTestDescription());
+        SysPropHandler sysPropHandler = new SysPropHandler(tcObject.getTestCaseDescription());
         if (stringToProcess.contains(SysPropHeatPlaceholderModule.SYS_PROP_PLACEHOLDER)) {
             processedMap.put(SysPropHeatPlaceholderModule.DEFAULT_PRELOADED_VALUE, sysPropHandler.processString(stringToProcess));
         }

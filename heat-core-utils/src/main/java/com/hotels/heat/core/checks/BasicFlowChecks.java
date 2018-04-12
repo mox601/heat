@@ -18,7 +18,7 @@ package com.hotels.heat.core.checks;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.testng.ITestContext;
 
 import com.hotels.heat.core.handlers.PlaceholderHandler;

@@ -1,6 +1,20 @@
-package com.hotels.heat.core.handlers;
+/**
+ * Copyright (C) 2015-2018 Expedia Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.hotels.heat.core.testcasedetails;
 
-import com.hotels.heat.core.runner.TestBaseRunner;
 
 import java.util.Map;
 
@@ -12,6 +26,9 @@ public final class TestCase {
     private String testCaseDescription = null;
     private String testStepId = null;
     private boolean isSkippable = false;
+
+    public static final String ATTR_TESTCASE_ID = "testId";
+    public static final String ATTR_TESTCASE_DESCRIPTION = "testName";
 
     private TestCase(String suiteName,
                      String id) {
@@ -61,8 +78,8 @@ public final class TestCase {
     }*/
 
     public static void populateTestCaseObjAtomicTc(Map testCaseParams, TestCase tcObjectInput) {
-        tcObjectInput.setTestCaseIdNumber(testCaseParams.get(TestBaseRunner.ATTR_TESTCASE_ID).toString());
-        tcObjectInput.setTestCaseDescription(testCaseParams.get(TestBaseRunner.ATTR_TESTCASE_DESCRIPTION).toString());
+        tcObjectInput.setTestCaseIdNumber(testCaseParams.get(ATTR_TESTCASE_ID).toString());
+        tcObjectInput.setTestCaseDescription(testCaseParams.get(ATTR_TESTCASE_DESCRIPTION).toString());
     }
 
     public String getTestSuiteName() {
@@ -118,5 +135,9 @@ public final class TestCase {
 
     public void resetTestCaseId() {
         this.testCaseIdNumber = null;
+    }
+
+    public String getTestCaseDescription() {
+        return this.testCaseDescription;
     }
 }

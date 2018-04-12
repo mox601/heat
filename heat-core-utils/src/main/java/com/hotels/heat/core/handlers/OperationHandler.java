@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.hotels.heat.core.checks.BasicMultipleChecks;
 import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import com.hotels.heat.core.utils.DataExtractionSupport;
 import com.hotels.heat.core.utils.TestCaseUtils;
 import com.hotels.heat.core.utils.log.Log;
@@ -50,7 +51,6 @@ public class OperationHandler {
 
     private String checkDescription;
     private boolean isBlocking = true;
-    private final Log logUtils;
     private Object responses;
     private DataExtractionSupport dataExtractionSupport;
     private final AssertionHandler assertionHandler;
@@ -58,19 +58,23 @@ public class OperationHandler {
 
     private Map<Integer, Map<String, String>> retrievedParameters;
 
+    private Log logger = new Log(OperationHandler.class);
+    private TestCase tcObject;
+
     /**
      * Handler for all possible operations (single mode, compare mode, flow mode).
      * @param fieldsToCheck it is the map representing the single check block from the json input file.
      * @param response it is the response retrieved after the request to the service under test
      */
     public OperationHandler(Map fieldsToCheck,
-            Object response) {
+            Object response,
+            TestCase tcObject) {
+        this.tcObject = tcObject;
         this.retrievedParameters = new HashMap<>();
-        this.logUtils = TestSuiteHandler.getInstance().getLogUtils();
         this.responses = response;
-        this.dataExtractionSupport = new DataExtractionSupport(this.logUtils);
+        this.dataExtractionSupport = new DataExtractionSupport(this.tcObject);
         this.fieldsToCheck = fieldsToCheck;
-        this.assertionHandler = new AssertionHandler();
+        this.assertionHandler = new AssertionHandler(this.tcObject);
     }
 
     /**
@@ -81,7 +85,7 @@ public class OperationHandler {
         boolean isExecutionOk = true;
 
         if (!fieldsToCheck.containsKey(JSON_ELEM_ACTUAL_VALUE) || !fieldsToCheck.containsKey(JSON_ELEM_EXPECTED_VALUE)) {
-            throw new HeatException("json input format not supported! '" + fieldsToCheck.toString() + "'");
+            throw new HeatException(this.getClass(), this.tcObject, "json input format not supported! '{}'", fieldsToCheck.toString());
         }
 
         if (isComparingBlock()) {
@@ -119,20 +123,20 @@ public class OperationHandler {
             if (objMapRetrieved.containsKey(JSON_ELEM_ACTUAL_VALUE)) {
                 if (objMapRetrieved.containsKey(JSON_ELEM_REFERRING_OBJECT)) {
                     Response rsp = mapServiceIdResponse.get(objMapRetrieved.get(JSON_ELEM_REFERRING_OBJECT).toString());
-                    DataExtractionSupport dataSupport = new DataExtractionSupport(this.logUtils);
+                    DataExtractionSupport dataSupport = new DataExtractionSupport(this.tcObject);
                     strRetrieved = dataSupport.process(objMapRetrieved.get(JSON_ELEM_ACTUAL_VALUE), rsp, retrievedParameters);
                 } else {
                     if (!objMapRetrieved.get(JSON_ELEM_ACTUAL_VALUE).toString().contains(PlaceholderHandler.PLACEHOLDER_SYMBOL_BEGIN)) {
                         strRetrieved = objMapRetrieved.get(JSON_ELEM_ACTUAL_VALUE).toString();
                     } else {
-                        throw new HeatException(this.logUtils.getExceptionDetails() + "Input Json does not contain 'referringObjectName' field");
+                        throw new HeatException(this.getClass(), this.tcObject, "Input Json does not contain 'referringObjectName' field");
                     }
                 }
             } else {
-                throw new HeatException(this.logUtils.getExceptionDetails() + "Input Json does not contain 'actualValue' field");
+                throw new HeatException(this.getClass(), this.tcObject, "Input Json does not contain 'actualValue' field");
             }
         } catch (Exception oEx) {
-            throw new HeatException(this.logUtils.getExceptionDetails() + "Exception occurred: '" + oEx.getLocalizedMessage() + "'");
+            throw new HeatException(this.getClass(), this.tcObject, oEx);
         }
 
         return strRetrieved;
@@ -163,16 +167,16 @@ public class OperationHandler {
         String operationToExecute = loadOperationToExecuteOrDefault(StringValidator.STRING_OPERATOR_EQUALS_TO);
         loadCheckDescription();
         String operationDescription = checkDescription + " --> '" + processedActualValue + "' '" + operationToExecute + "' '" + expectedValue + "'";
-        this.logUtils.debug("{}: actualValue '{}' (processed '{}')  / operation '{}' / expectedValue '{}'",
+        logger.debug(this.tcObject, "{}: actualValue '{}' (processed '{}')  / operation '{}' / expectedValue '{}'",
                         checkDescription, actualValue, processedActualValue, operationToExecute, expectedValue);
         try {
             String fieldCheckFormat = loadFieldCheckFormatOrDefault("int");
             isExecutionOk = mathOrStringChecks(operationToExecute, processedActualValue, expectedValue, fieldCheckFormat);
         }  catch (Exception oEx) {
-            logUtils.error("Exception: class {}, cause {}, message {}",
+            logger.error(this.tcObject, "Exception: class {}, cause {}, message {}",
                     oEx.getClass(), oEx.getCause(), oEx.getLocalizedMessage());
             operationDescription = "<" + operationDescription + ">";
-            throw new HeatException(logUtils.getExceptionDetails() + "It is not possible to execute the check " + operationDescription);
+            throw new HeatException(this.getClass(), this.tcObject, "It is not possible to execute the check {}", operationDescription);
         }
         return isExecutionOk;
     }
@@ -209,7 +213,7 @@ public class OperationHandler {
         // get each element of the array and placeholderProcessString it with the placeholderProcessString handler
         List<String> expectedElementList = (List<String>) fieldsToCheck.get(JSON_ELEM_EXPECTED_VALUE);
         List<String> processedList = new ArrayList<>();
-        PlaceholderHandler placeholderHandler = new PlaceholderHandler();
+        PlaceholderHandler placeholderHandler = new PlaceholderHandler(this.tcObject);
         placeholderHandler.setResponse((Response) responses);
         // TODO: bisogna passare al placeholder la response!!!!!
         expectedElementList.forEach(listElement -> {
@@ -221,7 +225,7 @@ public class OperationHandler {
         switch (operationToExecute) {
         case StringValidator.STRING_OPERATOR_CONTAINS:
             for (String element : processedList) {
-                logUtils.debug("{} actualValue ('{}') has to contain '{}'", assertionString, actualValue, element);
+                logger.debug(this.tcObject, "{} actualValue ('{}') has to contain '{}'", assertionString, actualValue, element);
                 isContainsCheckOk = isContainsCheckOk && assertionHandler.assertion(false, "assertTrue",
                         "actualValue ('" + actualValue + "') has to contain '" + element + "'", actualValue.contains(element));
             }
@@ -229,7 +233,7 @@ public class OperationHandler {
             break;
         case StringValidator.STRING_OPERATOR_NOT_CONTAINS:
             for (String element : processedList) {
-                logUtils.debug("{} actualValue ('{}') has not to contain '{}'", assertionString, actualValue, element);
+                logger.debug(this.tcObject, "{} actualValue ('{}') has not to contain '{}'", assertionString, actualValue, element);
                 isContainsCheckOk = isContainsCheckOk && assertionHandler.assertion(false, "assertFalse",
                         "actualValue ('" + actualValue + "') has not to contain '" + element + "'", actualValue.contains(element));
             }
@@ -237,8 +241,8 @@ public class OperationHandler {
             break;
         default:
             isExecutionOk = false;
-            logUtils.error("Unsupported operation in case of expected values as array");
-            throw new HeatException("Unsupported operation in case of expected values as array");
+            logger.error(this.tcObject, "Unsupported operation in case of expected values as array");
+            throw new HeatException(this.getClass(), this.tcObject, "Unsupported operation in case of expected values as array");
         }
 
         return isExecutionOk;
@@ -269,19 +273,19 @@ public class OperationHandler {
         if (actualValue.contains(PlaceholderHandler.PATH_PLACEHOLDER)) {
             TestCaseUtils testCaseUtils = TestSuiteHandler.getInstance().getTestCaseUtils();
             String jsonPathToCheck = testCaseUtils.regexpExtractor(actualValue, PlaceholderHandler.PATH_JSONPATH_REGEXP, 1);
-            this.logUtils.debug("check if the path '{}' is {} in the response",
+            logger.debug(this.tcObject, "check if the path '{}' is {} in the response",
                         jsonPathToCheck, expectedValue);
             boolean isPathPresent = fieldPresent((Response) responses, jsonPathToCheck);
             if (PlaceholderHandler.PLACEHOLDER_NOT_PRESENT.equals(expectedValue)) {
                 isExecutionOk = assertionHandler.assertion(isBlocking, "assertFalse",
-                    logUtils.getTestCaseDetails() + "json path '" + jsonPathToCheck + "' has not to be present in the response --> ", isPathPresent);
+                    "json path '" + jsonPathToCheck + "' has not to be present in the response --> ", isPathPresent);
             } else if (PlaceholderHandler.PLACEHOLDER_PRESENT.equals(expectedValue)) {
                 isExecutionOk = assertionHandler.assertion(isBlocking, "assertTrue",
-                    logUtils.getTestCaseDetails() + "json path '" + jsonPathToCheck + "' has to be present in the response -->", isPathPresent);
+                    "json path '" + jsonPathToCheck + "' has to be present in the response -->", isPathPresent);
             }
         } else {
             isExecutionOk = false;
-            logUtils.error("the check can be executed ONLY if the actual value is a \"" + PlaceholderHandler.PLACEHOLDER_SYMBOL_BEGIN + "path\"-style placeholder");
+            logger.error(this.tcObject, "the check can be executed ONLY if the actual value is a \"{}path\"-style placeholder", PlaceholderHandler.PLACEHOLDER_SYMBOL_BEGIN);
         }
         return isExecutionOk;
     }
@@ -316,7 +320,4 @@ public class OperationHandler {
         this.retrievedParameters = retrievedParameters;
     }
 
-    public Log getLogUtils() {
-        return logUtils;
-    }
 }

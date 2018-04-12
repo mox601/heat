@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Map;
 import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import com.hotels.heat.core.utils.log.Log;
 
 import com.jayway.restassured.response.Response;
@@ -38,12 +39,12 @@ public class DataExtractionSupport {
     public static final String REGEXP_MATCH_JSON_ELEMENT = "regexpToMatch";
     public static final String OCCURRENCE_JSON_ELEMENT = "occurrenceOf";
 
-    private final Log logUtils;
-
     private Map<Integer, Map<String, String>> retrievedParametersFlowMode;
+    private Log logger = new Log(DataExtractionSupport.class);
+    private TestCase tcObject;
 
-    public DataExtractionSupport(Log logUtils) {
-        this.logUtils = logUtils;
+    public DataExtractionSupport(TestCase tcObject) {
+        this.tcObject = tcObject;
         this.retrievedParametersFlowMode = new HashMap<>();
     }
 
@@ -61,17 +62,16 @@ public class DataExtractionSupport {
     public String process(Object extractionObj, Response response, Map retrievedParametersFlowMode) {
         String outputStr = "";
         this.retrievedParametersFlowMode = retrievedParametersFlowMode;
-        logUtils.trace("extractionObj = '{}'", extractionObj.toString());
+        logger.trace(this.tcObject, "extractionObj = '{}'", extractionObj.toString());
         if (extractionObj.getClass().equals(String.class)) {
             outputStr = processString((String) extractionObj, response);
         } else if (extractionObj.getClass().equals(HashMap.class)) {
             // we are using HashMap because JsonPath uses maps to manage json object
             outputStr = processMap((Map) extractionObj, response);
         } else {
-            throw new HeatException(logUtils.getExceptionDetails() + "actualValue/expectedValue belongs to "
-                    + extractionObj.getClass().toString() + " not supported");
+            throw new HeatException(this.getClass(), this.tcObject, "actualValue/expectedValue belongs to {} - not supported", extractionObj.getClass().toString());
         }
-        logUtils.trace("outputStr = '{}' (class: {})", outputStr, extractionObj.getClass().toString());
+        logger.trace(this.tcObject, "outputStr = '{}' (class: {})", outputStr, extractionObj.getClass().toString());
         return outputStr;
     }
 
@@ -84,12 +84,12 @@ public class DataExtractionSupport {
      * processing needed), the output will be the same as the input
      */
     private String processString(String inputString, Response response) {
-        PlaceholderHandler placeholderHandler = new PlaceholderHandler();
+        PlaceholderHandler placeholderHandler = new PlaceholderHandler(this.tcObject);
         placeholderHandler.setResponse(response);
         placeholderHandler.setFlowVariables(retrievedParametersFlowMode);
         String outputStr = (String) placeholderHandler.placeholderProcessString(inputString);
 
-        logUtils.trace("input value='{}' / outputStr='{}'", inputString, outputStr);
+        logger.trace(this.tcObject, "input value='{}' / outputStr='{}'", inputString, outputStr);
         return outputStr;
     }
 
@@ -112,7 +112,7 @@ public class DataExtractionSupport {
         } else if (map.containsKey(OCCURRENCE_JSON_ELEMENT) && map.containsKey(STRING_TO_PARSE_JSON_ELEMENT)) {
             outputStr = occurrenceOfProcessing(map, response);
         } else {
-            throw new HeatException(logUtils.getExceptionDetails() + "configuration " + map.toString() + " not supported");
+            throw new HeatException(this.getClass(), this.tcObject, "configuration {} not supported", map.toString());
         }
         return outputStr;
     }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.hotels.heat.core.heatspecificchecks;
 import java.util.Map;
 import java.util.Set;
 
-import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import com.jayway.restassured.response.Response;
 
 /**
@@ -26,21 +26,14 @@ import com.jayway.restassured.response.Response;
  */
 public abstract class SpecificChecks {
 
-    public void process(String suiteName, Map testCaseParamenter, Map<String, Response> responsesRetrieved, String testRef, String environment) {
-        if (this.handledSuites().contains(suiteName)) {
-            this.process(testCaseParamenter, responsesRetrieved, testRef, environment);
+    public void process(Map testCaseParamenter, Map<String, Response> responsesRetrieved, TestCase testCaseDetails, String environment) {
+        if (this.handledSuites().contains(testCaseDetails.getTestSuiteName())) {
+            this.process(testCaseParamenter, responsesRetrieved, testCaseDetails, environment, ""); //TODO ....!!!!!!
         }
     }
 
-    public void process(TestCase tcObject, Map testCaseParamenter, Map<String, Response> responsesRetrieved, String environment) {
-        if (this.handledSuites().contains(tcObject.getTestSuiteName())) {
-            this.process(testCaseParamenter, responsesRetrieved, environment);
-        }
-    }
-
-    protected abstract void process(Map testCaseParamenter, Map<String, Response> responsesRetrieved, String environment);
+    protected abstract void process(Map testCaseParameter, Map<String, Response> responsesRetrieved, TestCase testCaseDetails, String environment, String pippo);
 
     protected abstract Set<String> handledSuites();
-
 
 }

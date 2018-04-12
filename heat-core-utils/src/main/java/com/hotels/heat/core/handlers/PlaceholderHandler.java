@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2017 Expedia Inc.
+ * Copyright (C) 2015-2018 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,10 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.hotels.heat.core.dto.HeatTestDetails;
 import com.hotels.heat.core.environment.EnvironmentHandler;
 import com.hotels.heat.core.heatmodules.HeatPlaceholderModuleProvider;
 import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import com.hotels.heat.core.utils.TestCaseUtils;
 import com.hotels.heat.core.utils.log.Log;
 
@@ -221,8 +221,7 @@ public class PlaceholderHandler {
             try {
                 for (Map.Entry<String, HeatPlaceholderModuleProvider> entry : providerMap.entrySet()) {
                     if (outputObj.toString().contains(entry.getKey())) {
-                        HeatTestDetails testDetails = new HeatTestDetails(eh.getEnvironmentUnderTest(), this.tcObject.getTestCaseName());
-                        outputObj = (Map<String, String>) entry.getValue().getModuleInstance().process(outputObj.toString(), testDetails); //TODO pass the tcObject to the external module!!!!
+                        outputObj = (Map<String, String>) entry.getValue().getModuleInstance().process(outputObj.toString(), this.tcObject); //TODO pass the tcObject to the external module!!!!
                         break;
                     }
                 }

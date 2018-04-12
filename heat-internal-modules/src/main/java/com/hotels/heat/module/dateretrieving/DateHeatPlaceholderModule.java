@@ -18,7 +18,7 @@ package com.hotels.heat.module.dateretrieving;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hotels.heat.core.dto.HeatTestDetails;
+import com.hotels.heat.core.handlers.TestCase;
 import com.hotels.heat.core.heatmodules.HeatPlaceholderModule;
 
 /**
@@ -43,11 +43,11 @@ public final class DateHeatPlaceholderModule implements HeatPlaceholderModule {
     }
 
     @Override
-    public Map<String, String> process(String stringToProcess, HeatTestDetails testDetails) {
+    public Map<String, String> process(String stringToProcess, TestCase tcObject) {
         Map<String, String> processedMap = new HashMap<>();
         processedMap.put(DateHeatPlaceholderModule.DEFAULT_PRELOADED_VALUE, stringToProcess);
 
-        DateHandler dateHandler = new DateHandler(testDetails.getTestDescription());
+        DateHandler dateHandler = new DateHandler(tcObject.getTestCaseDescription());
         if (stringToProcess.contains(DateHeatPlaceholderModule.TODAY_PLACEHOLDER)) {
             processedMap.put(DateHeatPlaceholderModule.DEFAULT_PRELOADED_VALUE, dateHandler.changeDatesPlaceholders(true, stringToProcess));
         }

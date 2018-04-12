@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-import com.hotels.heat.core.handlers.TestCase;
+import com.hotels.heat.core.testcasedetails.TestCase;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
@@ -59,8 +59,7 @@ public class TestBaseRunner implements RunnerInterface {
 
     }
 
-    public static final String ATTR_TESTCASE_ID = "testId";
-    public static final String ATTR_TESTCASE_DESCRIPTION = "testName";
+
 
     public static final String STATUS_SKIPPED = "SKIPPED";
 
@@ -235,7 +234,7 @@ public class TestBaseRunner implements RunnerInterface {
     @Override
     public void specificChecks(TestCase tcObject, Map testCaseParams, Map<String, Response> rspRetrieved, String environment) {
         ServiceLoader.load(SpecificChecks.class).forEach((checks) -> {
-            checks.process(tcObject, testCaseParams, rspRetrieved,
+            checks.process(testCaseParams, rspRetrieved, this.tcObject,
                     TestSuiteHandler.getInstance().getEnvironmentHandler().getEnvironmentUnderTest());
         });
     }
