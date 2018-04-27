@@ -67,6 +67,7 @@ public final class EnvironmentHandler {
      * @param propFilePath path of the prop file
      */
     public EnvironmentHandler(String propFilePath, TestCase tcObject) {
+        this.tcObject = tcObject;
         this.placeholderHandler = new PlaceholderHandler(this.tcObject);
         this.ph = new PropertyHandler(propFilePath, placeholderHandler, this.tcObject);
         loadSysProperties();

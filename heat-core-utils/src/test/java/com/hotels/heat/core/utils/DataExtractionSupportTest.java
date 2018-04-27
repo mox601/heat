@@ -23,15 +23,13 @@ import java.util.Map;
 import com.hotels.heat.core.testcasedetails.TestCase;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.hotels.heat.core.specificexception.HeatException;
-import com.hotels.heat.core.log.Log;
+import com.hotels.heat.core.specificexceptions.HeatException;
 
 /**
  * Unit Tests for {@link DataExtractionSupport}.

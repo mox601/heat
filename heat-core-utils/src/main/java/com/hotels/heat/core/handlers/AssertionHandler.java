@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 import com.hotels.heat.core.testcasedetails.TestCase;
 import org.testng.asserts.Assertion;
 
-import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.specificexceptions.HeatException;
 import com.hotels.heat.core.utils.CustomSoftAssert;
 import com.hotels.heat.core.log.Log;
 

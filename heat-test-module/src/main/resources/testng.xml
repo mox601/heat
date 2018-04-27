@@ -3,10 +3,10 @@
 <suite name="HEAT RUN" parallel="tests" thread-count="1">
 
     <!-- Please do not touch this section: START -->
-    <listeners>
+    <!--listeners>
         <listener class-name="com.hotels.heat.core.listeners.CustomTestNgListener"/>
         <listener class-name="com.hotels.heat.core.listeners.CustomJUnitReportListener" />
-    </listeners>
+    </listeners-->
     <parameter name="envPropFilePath" value="environment.properties"/>
     <!-- Please do not touch this section: END -->
 

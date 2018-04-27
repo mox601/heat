@@ -30,7 +30,7 @@ import org.apache.http.conn.ConnectTimeoutException;
 
 import com.google.common.base.Optional;
 
-import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.specificexceptions.HeatException;
 import com.hotels.heat.core.log.Log;
 
 import com.jayway.restassured.RestAssured;

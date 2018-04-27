@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import com.hotels.heat.core.specificexceptions.HeatException;
 import com.hotels.heat.core.testcasedetails.TestCase;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeSuite;
@@ -61,13 +62,8 @@ public class TestBaseRunner implements RunnerInterface {
 
 
 
-    public static final String STATUS_SKIPPED = "SKIPPED";
-
     public static final String TESTCASE_ID_SEPARATOR = ".";
     public static final String TESTCASE_ID_SEPARATOR_ESCAPED = "\\.";
-
-    public static final String SUITE_DESCRIPTION_CTX_ATTR = "suiteDescription";
-    public static final String TC_DESCRIPTION_CTX_ATTR = "tcDescription";
 
     public static final String NO_INPUT_WEBAPP_NAME = "noInputWebappName";
     public static final String WEBAPP_NAME = "webappName";
@@ -79,6 +75,7 @@ public class TestBaseRunner implements RunnerInterface {
     private String inputJsonPath;
     private TestCase tcObject = TestCase.getInstance();
     private Log logger = new Log(TestBaseRunner.class);
+    TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
 
     /**
      * Method that takes test suites parameters and sets some environment properties.
@@ -92,17 +89,14 @@ public class TestBaseRunner implements RunnerInterface {
     public void beforeTestSuite(String propFilePath,
                                 @Optional(NO_INPUT_WEBAPP_NAME) String inputWebappName,
                                 ITestContext context) {
-        //logger.debug(this.tcObject, ">> Executing beforeTestSuite method");
-        TestSuiteHandler testSuiteHandler = TestSuiteHandler.getInstance();
         testSuiteHandler.setPropertyFilePath(propFilePath);
-        testSuiteHandler.populateEnvironmentHandler();
         populateTestCaseObject(context);
         testSuiteHandler.setTestCaseObject(this.tcObject);
-        //logger.debug(this.tcObject, ">> Ended beforeTestSuite method");
+        testSuiteHandler.populateEnvironmentHandler(this.tcObject);
     }
 
     private void populateTestCaseObject(ITestContext context) {
-        tcObject.setTestSuiteName(context.getName());
+        this.tcObject.setTestSuiteName(context.getName());
     }
 
     /**
@@ -126,9 +120,7 @@ public class TestBaseRunner implements RunnerInterface {
     @Override
     @DataProvider(name = "provider")
     public Iterator<Object[]> providerJson() {
-        TestSuiteHandler tcHandler = TestSuiteHandler.getInstance();
-        tcHandler.setTestCaseObj(this.tcObject);
-        Iterator<Object[]> it = tcHandler.getTestCaseUtils().jsonReader(inputJsonPath);
+        Iterator<Object[]> it = testSuiteHandler.getTestCaseUtils().jsonReader(inputJsonPath);
         return it;
     }
 
@@ -233,10 +225,14 @@ public class TestBaseRunner implements RunnerInterface {
      */
     @Override
     public void specificChecks(TestCase tcObject, Map testCaseParams, Map<String, Response> rspRetrieved, String environment) {
-        ServiceLoader.load(SpecificChecks.class).forEach((checks) -> {
-            checks.process(this.tcObject.getTestSuiteName(), testCaseParams, rspRetrieved, this.tcObject,
-                    TestSuiteHandler.getInstance().getEnvironmentHandler().getEnvironmentUnderTest());
-        });
+            ServiceLoader.load(SpecificChecks.class).forEach((checks) -> {
+                try {
+                    checks.process(this.tcObject.getTestSuiteName(), testCaseParams, rspRetrieved, this.tcObject,
+                            TestSuiteHandler.getInstance().getEnvironmentHandler().getEnvironmentUnderTest());
+                } catch (Exception oEx) {
+                    throw new HeatException(checks.getClass(), this.tcObject, oEx, "Exception in SpecificChecks - ");
+                }
+            });
     }
 
 

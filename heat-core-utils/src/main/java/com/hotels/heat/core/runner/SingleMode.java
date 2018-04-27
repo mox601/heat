@@ -29,7 +29,7 @@ import org.testng.annotations.Test;
 
 import com.hotels.heat.core.checks.BasicChecks;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
-import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.specificexceptions.HeatException;
 import com.hotels.heat.core.utils.RestAssuredRequestMaker;
 import com.hotels.heat.core.utils.TestCaseUtils;
 import com.hotels.heat.core.utils.TestRequest;

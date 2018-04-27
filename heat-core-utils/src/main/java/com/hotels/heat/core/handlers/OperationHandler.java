@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hotels.heat.core.checks.BasicMultipleChecks;
-import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.specificexceptions.HeatException;
 import com.hotels.heat.core.testcasedetails.TestCase;
 import com.hotels.heat.core.utils.DataExtractionSupport;
 import com.hotels.heat.core.utils.TestCaseUtils;

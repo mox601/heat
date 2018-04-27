@@ -32,7 +32,7 @@ import com.hotels.heat.core.environment.EnvironmentHandler;
 import com.hotels.heat.core.handlers.PlaceholderHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
 import com.hotels.heat.core.runner.TestBaseRunner;
-import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.specificexceptions.HeatException;
 import com.hotels.heat.core.log.Log;
 
 import com.jayway.restassured.internal.http.Method;

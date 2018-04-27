@@ -28,7 +28,7 @@ import org.apache.http.HttpStatus;
 import com.hotels.heat.core.handlers.AssertionHandler;
 import com.hotels.heat.core.handlers.OperationHandler;
 import com.hotels.heat.core.handlers.TestSuiteHandler;
-import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.specificexceptions.HeatException;
 import com.hotels.heat.core.utils.TestCaseUtils;
 import com.hotels.heat.core.log.Log;
 

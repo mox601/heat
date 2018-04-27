@@ -28,7 +28,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.hotels.heat.core.specificexception.HeatException;
+import com.hotels.heat.core.specificexceptions.HeatException;
 import com.jayway.restassured.builder.ResponseBuilder;
 import com.jayway.restassured.response.Cookie;
 import com.jayway.restassured.response.Cookies;

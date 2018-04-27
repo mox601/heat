@@ -82,7 +82,8 @@ public final class TestSuiteHandler {
         environmentHandler = eh;
     }
 
-    public void populateEnvironmentHandler() {
+    public void populateEnvironmentHandler(TestCase tcObject) {
+        this.tcObject = tcObject;
         this.environmentHandler = new EnvironmentHandler(propertyFilePath, this.tcObject);
     }
 
